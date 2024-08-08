@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedMomentsBackend", "SharedMomentsBackend\SharedMomentsBackend.csproj", "{004ADD13-6A85-493A-B362-4B77E1B0FB30}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{004ADD13-6A85-493A-B362-4B77E1B0FB30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{004ADD13-6A85-493A-B362-4B77E1B0FB30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{004ADD13-6A85-493A-B362-4B77E1B0FB30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{004ADD13-6A85-493A-B362-4B77E1B0FB30}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {26F01BA7-23DF-4FF4-A492-1116C2062F8D}
+	EndGlobalSection
+EndGlobal

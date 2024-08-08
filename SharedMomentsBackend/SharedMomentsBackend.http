@@ -1,0 +1,6 @@
+@SharedMomentsBackend_HostAddress = http://localhost:5069
+
+GET {{SharedMomentsBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
