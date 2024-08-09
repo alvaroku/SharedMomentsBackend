@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SharedMomentsBackend.App.DB;
+using SharedMomentsBackend.App.Services.Implementations;
+using SharedMomentsBackend.App.Services.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -80,6 +82,12 @@ builder.Services.AddAuthentication(options =>
 });
 builder.Services.AddAuthorization();
 
+
+// Configurar AutoMapper
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+// Registrar servicios
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
