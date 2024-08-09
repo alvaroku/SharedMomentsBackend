@@ -39,6 +39,24 @@ namespace SharedMomentsBackend.App.Services.Implementations
             response.Data.Token = GetToken(user.Id, user.Email);    
             return response;
         }
+
+        public async Task<ResultPattern<UserResponse>> Register(UserRequest request)
+        {
+            ResultPattern<UserResponse> response = new ResultPattern<UserResponse>();
+            request.PasswordHash = Utils.HashPassword(request.PasswordHash);
+            if (!request.RoleId.HasValue)
+            {
+                request.RoleId = await _dbContext.Roles.Where(x => x.Name.Equals("User")).Select(x => x.Id).FirstOrDefaultAsync();
+            }
+            User user = _mapper.Map<User>(request);
+            await _dbContext.Users.AddAsync(user);
+            await _dbContext.SaveChangesAsync();
+            response.Data = _mapper.Map<UserResponse>(user);
+            response.Message = "Usuario registrado correctamente.";
+            response.Data.Token = GetToken(user.Id, user.Email);
+            return response;
+        }
+
         public string GetToken(Guid userId, string userName)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));

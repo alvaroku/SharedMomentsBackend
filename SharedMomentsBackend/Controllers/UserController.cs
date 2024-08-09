@@ -15,10 +15,16 @@ namespace SharedMomentsBackend.Controllers
             _userService = userService;
         }
 
-        [HttpPost]
+        [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
             ResultPattern<LoginResponse> result = await _userService.Login(request);
+            return StatusCode(result.StatusCode, result);
+        }
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register(UserRequest request)
+        {
+            ResultPattern<UserResponse> result = await _userService.Register(request);
             return StatusCode(result.StatusCode, result);
         }
     }

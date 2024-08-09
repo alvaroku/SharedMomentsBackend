@@ -9,6 +9,8 @@ namespace SharedMomentsBackend.App.Services.MappingProfiles
         public UserProfile()
         {
             CreateMap<User, LoginResponse>().ReverseMap();
+            CreateMap<User, UserRequest>().ReverseMap();
+            CreateMap<User, UserResponse>().ReverseMap();
         }
     }
 }
