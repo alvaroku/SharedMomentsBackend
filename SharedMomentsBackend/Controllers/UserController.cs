@@ -21,6 +21,7 @@ namespace SharedMomentsBackend.Controllers
             ResultPattern<LoginResponse> result = await _userService.Login(request);
             return StatusCode(result.StatusCode, result);
         }
+
         [HttpPost("Register")]
         public async Task<IActionResult> Register(UserRequest request)
         {

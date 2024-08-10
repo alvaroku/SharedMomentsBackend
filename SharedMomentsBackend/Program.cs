@@ -88,7 +88,9 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 // Registrar servicios
 builder.Services.AddScoped<IUserService, UserService>();
-
+builder.Services.AddScoped<IMomentService, MomentService>();
+builder.Services.AddScoped<IResourceManager, ResourceManager>();
+builder.Services.AddScoped<IResourceService, ResourceService>();
 var app = builder.Build();
 
 app.UseCors("MyPolicy");

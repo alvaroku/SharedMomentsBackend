@@ -1,6 +1,4 @@
-﻿using SharedMomentsBackend.App.Models.Entities;
-
-namespace SharedMomentsBackend.App.Models.DTOs
+﻿namespace SharedMomentsBackend.App.Models.DTOs
 {
     public class UserRequest
     {
