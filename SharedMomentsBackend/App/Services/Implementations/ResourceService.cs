@@ -26,7 +26,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             bool exist = await _dbContext.Resources.AnyAsync(x => x.Id == id);
             if (!exist)
             {
-                response.Message = "Recurso no encontrado";
+                response.Message = "Recurso no encontrado.";
                 response.StatusCode = 404;
                 return response;
             }
@@ -36,7 +36,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _dbContext.Resources.Remove(resource);
             await _dbContext.SaveChangesAsync();
             response.Data = true;
-            response.Message = "Recurso eliminado";
+            response.Message = "Recurso eliminado correctamente.";
             return response;
         }
     }

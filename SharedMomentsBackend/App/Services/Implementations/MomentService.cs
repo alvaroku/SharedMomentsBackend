@@ -90,7 +90,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                     Extension = x.Resource.Extension
                 }).ToList()
             };
-            response.Message = "Momento creado correctamente";
+            response.Message = "Momento creado correctamente.";
             return response;
         }
         public async Task<ResultPattern<MomentResponse>> GetMoment(Guid id)
@@ -99,8 +99,9 @@ namespace SharedMomentsBackend.App.Services.Implementations
             bool exist = await _dbContext.Moments.AnyAsync(x => x.Id == id);
             if (!exist)
             {
-                response.Message = "Momento no encontrado";
+                response.Message = "Momento no encontrado.";
                 response.StatusCode = 404;
+                response.IsSuccess = false;
                 return response;
             }
             Moment moment = await _dbContext.Moments
@@ -130,8 +131,9 @@ namespace SharedMomentsBackend.App.Services.Implementations
             bool exist = await _dbContext.Moments.AnyAsync(x => x.Id == id);
             if (!exist)
             {
-                response.Message = "Momento no encontrado";
+                response.Message = "Momento no encontrado.";
                 response.StatusCode = 404;
+                response.IsSuccess = false;
                 return response;
             }
             if (await _dbContext.Moments.AnyAsync(x => x.Title == request.Title && x.Id != id))
@@ -181,7 +183,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                     Extension = x.Resource.Extension
                 }).ToList()
             };
-            response.Message = "Momento actualizado correctamente";
+            response.Message = "Momento actualizado correctamente.";
             return response;
         }
 
@@ -191,8 +193,9 @@ namespace SharedMomentsBackend.App.Services.Implementations
             bool exist = await _dbContext.Moments.AnyAsync(x => x.Id == id);
             if (!exist)
             {
-                response.Message = "Momento no encontrado";
+                response.Message = "Momento no encontrado.";
                 response.StatusCode = 404;
+                response.IsSuccess = false;
                 return response;
             }
             Moment moment = await _dbContext.Moments
@@ -212,7 +215,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             await _dbContext.SaveChangesAsync();
             response.Data = true;
-            response.Message = "Momento eliminado correctamente";
+            response.Message = "Momento eliminado correctamente.";
             return response;
         }
 
