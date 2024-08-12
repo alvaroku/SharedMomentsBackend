@@ -1,16 +1,13 @@
 ﻿using AutoMapper;
-using Azure;
 using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.DB;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.Entities;
 using SharedMomentsBackend.App.Services.Interfaces;
-using System.Linq;
-using System.Resources;
 
 namespace SharedMomentsBackend.App.Services.Implementations
 {
-    public class MomentService:IMomentService
+    public class MomentService : IMomentService
     {
         IConfiguration _configuration;
         ApplicationDbContext _dbContext;
@@ -29,7 +26,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             ResultPattern<PaginateResponse<MomentResponse>> result = new ResultPattern<PaginateResponse<MomentResponse>>();
 
             PaginateResponse<MomentResponse> paginateResult = new PaginateResponse<MomentResponse>();
-      
+
             paginateResult.List = await _dbContext.Moments.Select(x => new MomentResponse
             {
                 Id = x.Id,
@@ -51,8 +48,16 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
         public async Task<ResultPattern<MomentResponse>> CreateMoment(MomentRequest request, List<ResourceRequest> resources)
         {
-            ResultPattern < MomentResponse > response = new ResultPattern<MomentResponse>();
+            ResultPattern<MomentResponse> response = new ResultPattern<MomentResponse>();
             Moment moment = _mapper.Map<Moment>(request);
+
+            if (await _dbContext.Moments.AnyAsync(x => x.Title == request.Title))
+            {
+                response.Message = "El título del momento ya está en uso.";
+                response.StatusCode = 409; // Código de estado 409 Conflict
+                response.IsSuccess = false;
+                return response;
+            }
 
             if (resources.Any())
             {
@@ -62,7 +67,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 {
                     string srcName = count == 0 ? $"{request.Title.Replace(" ", "")}" : $"{request.Title.Replace(" ", "")}_{count}";
                     Resource newResource = await _resourceManager.UploadFile(
-                    res.Stream, "moments", res.ContentType,srcName, res.Extension);
+                    res.Stream, "moments", res.ContentType, srcName, res.Extension);
                     _resources.Add(new MomentResource { Resource = newResource });
                     count++;
                 }
@@ -99,8 +104,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
             Moment moment = await _dbContext.Moments
-                .Include(x=>x.MomentResources)
-                .ThenInclude(z=>z.Resource).FirstAsync(x=>x.Id == id);
+                .Include(x => x.MomentResources)
+                .ThenInclude(z => z.Resource).FirstAsync(x => x.Id == id);
             response.Data = new MomentResponse
             {
                 Id = moment.Id,
@@ -123,10 +128,17 @@ namespace SharedMomentsBackend.App.Services.Implementations
             ResultPattern<MomentResponse> response = new ResultPattern<MomentResponse>();
 
             bool exist = await _dbContext.Moments.AnyAsync(x => x.Id == id);
-            if(!exist)
+            if (!exist)
             {
                 response.Message = "Momento no encontrado";
                 response.StatusCode = 404;
+                return response;
+            }
+            if (await _dbContext.Moments.AnyAsync(x => x.Title == request.Title && x.Id != id))
+            {
+                response.Message = "El título del momento ya está en uso.";
+                response.StatusCode = 409; // Código de estado 409 Conflict
+                response.IsSuccess = false;
                 return response;
             }
             Moment moment = await _dbContext.Moments
@@ -135,7 +147,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             if (resources.Any())
             {
-                int count = await MaxNumerationResource(id)+1;
+                int count = await MaxNumerationResource(id) + 1;
                 foreach (ResourceRequest res in resources)
                 {
                     string srcName = count == 0 ? $"{request.Title.Replace(" ", "")}" : $"{request.Title.Replace(" ", "")}_{count}";
@@ -143,7 +155,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                     res.Stream, "moments", res.ContentType, srcName, res.Extension);
                     moment.MomentResources.Add(new MomentResource { Resource = newResource });
                     count++;
-                }  
+                }
             }
 
             moment.Title = request.Title;
@@ -192,7 +204,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             foreach (Resource r in res)
             {
-                await _resourceManager.DeleteFile("moments",r.Name,r.Extension);
+                await _resourceManager.DeleteFile("moments", r.Name, r.Extension);
             }
 
             _dbContext.Resources.RemoveRange(res);

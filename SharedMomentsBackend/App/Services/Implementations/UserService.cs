@@ -43,6 +43,23 @@ namespace SharedMomentsBackend.App.Services.Implementations
         public async Task<ResultPattern<UserResponse>> Register(UserRequest request)
         {
             ResultPattern<UserResponse> response = new ResultPattern<UserResponse>();
+
+            if (await _dbContext.Users.AnyAsync(x => x.Email == request.Email))
+            {
+                response.Message = "El correo ingresado ya está en uso.";
+                response.StatusCode = 409; // Código de estado 409 Conflict
+                response.IsSuccess = false;
+                return response;
+            }
+
+            if (await _dbContext.Users.AnyAsync(x => x.PhoneNumber == request.PhoneNumber))
+            {
+                response.Message = "El teléfono ingresado ya está en uso.";
+                response.StatusCode = 409; // Código de estado 409 Conflict
+                response.IsSuccess = false;
+                return response;
+            }
+
             request.PasswordHash = Utils.HashPassword(request.PasswordHash);
             if (!request.RoleId.HasValue)
             {
@@ -59,24 +76,35 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
         public string GetToken(Guid userId, string userName)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
+            string issuer = _configuration["Jwt:Issuer"];
+            string audience = _configuration["Jwt:Audience"];
+            byte[] key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+            SigningCredentials signingCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha512Signature
+                                );
+            ClaimsIdentity subject = new ClaimsIdentity(new[]
             {
-            new Claim(JwtRegisteredClaimNames.Sub, userName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("userId", userId.ToString())
-        };
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Name, userName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, userName)
+            });
 
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddDays(1),
-                signingCredentials: credentials);
+            DateTime expires = DateTime.UtcNow.AddHours(-6).AddHours(8);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = subject,
+                Expires = expires,
+                Issuer = issuer,
+                Audience = audience,
+                SigningCredentials = signingCredentials
+            };
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+            string jwtToken = tokenHandler.WriteToken(token);
+            return jwtToken;
         }
     }
 }

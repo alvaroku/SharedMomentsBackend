@@ -1,13 +1,13 @@
 {
-  "type": "",
-  "project_id": "",
-  "private_key_id": "",
-  "private_key": "",
-  "client_email": "",
-  "client_id": "",
+  "type": "service_account",
+  "project_id": "amsharedmoments",
+  "private_key_id": "20c29b35ad0cf784adf728b83bdb501c29a7cdc1",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCc8N8HuBgR+Yxg\nPhLxfF4ZWr4a4WpAtv5HyzIeF5SBqzyr13UQ9e/uq7nViL0ah2JxUvmrWuKY8g3J\nUOFCypEgmMAu0eViUAfwtE14MgyoquZ2WkswmvfN9Bts/00oC61nwV8OVLJphwpV\nkXhLYvxR2ONRz8YgM5OBU6FitHGtFlPexk6tU17wLM/I4ekKxpX6wvcQEfZGeUZ4\nt4iwrLArqyVLGr5/aJ+u7e9423/tK6g/fqVhBOdCiXzT0Nur28eOWuA8QXqXRQIj\nrA2uUngN5kbY75mJrqV/sGcVc1eg0QomG3bDid/HsEd7RA3tIQoHfYK1mR/swwLX\n+6X747rhAgMBAAECggEAC4qNJECuCHhdEeDOvNKECwJI06o7CZpLddUkEOF0Ctsg\nYZS9J6umYttfFaxyF6bYHvRWpvrOiifWyrS3dBV4ebix/V9zKnkvNEzWG542nxq+\nSvrV57OlwJAQikH2FxlQvb4TMvcYjbkgEe3aNlUHsC8ufGA2tjyEvvB7AEq7x1os\n3HaOaX1Ln/FfY0bV7ioXQdpyHQQHUJE9phY63reKUPd8AGrEgodsPBZyk5Sws854\n8J6zYkj5nnx4bpk5R38gyp4gYzF7xmHd+slmgFTImoABGSK0vKxcBn08QvxowCYJ\nbznBdu0nqhaBfHQOvB8v+sTwlOTXpAtg52WCsZCozwKBgQDdp2gpmNv+y4x1imck\nrorZWNYOhOy5tWaox7x8q8ou2gyxJMNkwMkd4m6roJ+eqs9z0V5ssMGl3D1dPWBJ\nriiHsv7Q/L/MbOmLy2Cm2ST61aOoSTEJ6Q+dOzzT9lIfx/SovsABBLMPfc9je9zW\nGaTRYI10t7viOF6M9QEtJmcDZwKBgQC1QmurfdBeMQ5XZPOLmqwBQ2sk3E0wov83\ncv+5PPtPLOziKVP7QmJ8ziJTwHnn+pACBEgczXVS52URANNtszUvq2YZN5lRv4D4\neYajlj6tFxUlQpn/Ew7Ov8bL60cod22SqASMrrz3lSnexIvwWNB8pRU34jh39D0a\nZ1NHndPqdwKBgQCPH+AErC2yEyF5bIs5hnMl8VUXPwHU0KufZInzPsJpCmeToxeA\nYXP8FhA8RpWLUORv9suwB1qjjNka8dzQ9uI47X3Y2LvIdrM/j22zjxdv2K+6pLhD\nm/h3IJ8ghzd0ShtTMwisH6q34BcgOATbQufIQz5UFaf+ZUO4ZSQDUX7HFQKBgFQE\np7fkJ7OhdY5ZAvMRDO3A/GcnnrgOtdJUAekxNSQsJNloYr8ytEg5nHvJ2jgHUr08\nktiW++0jyRsqkNZmnR6tijPiK7VS2UtTuW8Wc5L0Ah81UgCEKvb2ugVH18IQKcAz\nFXjIflsczz2tSVhtMqa0NrOirp4bnj8g6d9mbxZdAoGBALlGM+pvtdm8svR2Gb8M\ny1PML/yWZip+76S2bGp8amNq8IEjSyClymdC7KJtSESQCjSJ5AD8W3hTGru3iYFk\nVGBR+K0pFjIRHNQIYveJkKs99mJcnDRpUrK2F8M3MGebVAicFwwiOA4fsKiILmzH\nwdhYatc1CMuaCO2J8hA6rRUp\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-9kncu@amsharedmoments.iam.gserviceaccount.com",
+  "client_id": "106573959512455030420",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://oauth2.googleapis.com/token",
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-9kncu%40amsharedmoments.iam.gserviceaccount.com",
   "universe_domain": "googleapis.com"
 }

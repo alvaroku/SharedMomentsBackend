@@ -14,7 +14,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         }
         public async Task<Stream> DownloadFile(string folderPath, string fileName, string extension)
         {
-            GoogleCredential firebaseCredential = await GoogleCredential.FromFileAsync("../SharedMomentsBackend/firebaseConfig.json", new CancellationToken());
+            GoogleCredential firebaseCredential = await GoogleCredential.FromFileAsync("firebaseConfig.json", new CancellationToken());
 
             StorageClient storage = StorageClient.Create(firebaseCredential);
 
@@ -27,8 +27,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
         public async Task<Resource> UploadFile(Stream stream, string folderPath, string contentType, string name, string extension)
         {
-
-            GoogleCredential firebaseCredential = await GoogleCredential.FromFileAsync("../SharedMomentsBackend/firebaseConfig.json", new CancellationToken());
+            GoogleCredential firebaseCredential = await GoogleCredential.FromFileAsync("firebaseConfig.json", new CancellationToken());
 
             StorageClient storage = StorageClient.Create(firebaseCredential);
 
@@ -46,7 +45,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         }
         public async Task DeleteFile(string folderPath, string name, string extension)
         {
-            GoogleCredential firebaseCredential = await GoogleCredential.FromFileAsync("../SharedMomentsBackend/firebaseConfig.json", new CancellationToken());
+            GoogleCredential firebaseCredential = await GoogleCredential.FromFileAsync("firebaseConfig.json", new CancellationToken());
             StorageClient storage = StorageClient.Create(firebaseCredential);
             await storage.DeleteObjectAsync(_configuration["Firebase:BucketStorage"], $"{folderPath}/{name}{extension}");
         }
