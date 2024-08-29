@@ -12,5 +12,6 @@
         public Guid RoleId { get; set; }
         public Role Role { get; set; }
         public ICollection<AlbumUser> AlbumUsers { get; set; }
+        public ICollection<MomentUser> MomentUsers { get; set; }
     }
 }

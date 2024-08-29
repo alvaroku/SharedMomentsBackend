@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SharedMomentsBackend.App.DB;
 
 #nullable disable
 
-namespace SharedMomentsBackend.App.DB.Migrations
+namespace SharedMomentsBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240813151739_change_column_name")]
+    partial class change_column_name
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -151,36 +154,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
                     b.ToTable("MomentResources");
                 });
 
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.MomentUser", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("MomentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MomentId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("MomentUsers");
-                });
-
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Resource", b =>
                 {
                     b.Property<Guid>("Id")
@@ -246,19 +219,19 @@ namespace SharedMomentsBackend.App.DB.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("2c7046ed-154d-4465-b5ba-a2bb1b9f7ec5"),
-                            CreatedAt = new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(557),
+                            Id = new Guid("636b6318-de7f-45a8-be84-ccee51f42bbe"),
+                            CreatedAt = new DateTime(2024, 8, 13, 15, 17, 38, 556, DateTimeKind.Utc).AddTicks(3738),
                             IsActive = true,
                             Name = "Admin",
-                            UpdatedAt = new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(561)
+                            UpdatedAt = new DateTime(2024, 8, 13, 15, 17, 38, 556, DateTimeKind.Utc).AddTicks(3741)
                         },
                         new
                         {
-                            Id = new Guid("0cd538a8-7b59-4997-a0f7-1209a5419f29"),
-                            CreatedAt = new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(564),
+                            Id = new Guid("9c028acd-e75a-42c1-8cdf-ac5bb835fe23"),
+                            CreatedAt = new DateTime(2024, 8, 13, 15, 17, 38, 556, DateTimeKind.Utc).AddTicks(3743),
                             IsActive = true,
                             Name = "User",
-                            UpdatedAt = new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(564)
+                            UpdatedAt = new DateTime(2024, 8, 13, 15, 17, 38, 556, DateTimeKind.Utc).AddTicks(3743)
                         });
                 });
 
@@ -313,16 +286,16 @@ namespace SharedMomentsBackend.App.DB.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("3b52e1b1-af54-4ba7-b570-a541e0190331"),
-                            CreatedAt = new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(698),
+                            Id = new Guid("3511dd83-bb2f-43c0-8c24-99ec2127ac21"),
+                            CreatedAt = new DateTime(2024, 8, 13, 15, 17, 38, 556, DateTimeKind.Utc).AddTicks(3890),
                             DateOfBirth = new DateTime(2000, 5, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "alvaroku123@gmail.com",
                             IsActive = true,
                             Name = "Alvaro Kú",
                             PasswordHash = "b2867617492e26c338ab49f72afabc984d798b59755a27e312b953716ae964d7",
                             PhoneNumber = "9919596720",
-                            RoleId = new Guid("2c7046ed-154d-4465-b5ba-a2bb1b9f7ec5"),
-                            UpdatedAt = new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(699)
+                            RoleId = new Guid("636b6318-de7f-45a8-be84-ccee51f42bbe"),
+                            UpdatedAt = new DateTime(2024, 8, 13, 15, 17, 38, 556, DateTimeKind.Utc).AddTicks(3890)
                         });
                 });
 
@@ -392,25 +365,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
                     b.Navigation("Resource");
                 });
 
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.MomentUser", b =>
-                {
-                    b.HasOne("SharedMomentsBackend.App.Models.Entities.Moment", "Moment")
-                        .WithMany("MomentUsers")
-                        .HasForeignKey("MomentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SharedMomentsBackend.App.Models.Entities.User", "User")
-                        .WithMany("MomentUsers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Moment");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.User", b =>
                 {
                     b.HasOne("SharedMomentsBackend.App.Models.Entities.Resource", "Profile")
@@ -438,8 +392,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Moment", b =>
                 {
                     b.Navigation("MomentResources");
-
-                    b.Navigation("MomentUsers");
                 });
 
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Resource", b =>
@@ -450,8 +402,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.User", b =>
                 {
                     b.Navigation("AlbumUsers");
-
-                    b.Navigation("MomentUsers");
                 });
 #pragma warning restore 612, 618
         }

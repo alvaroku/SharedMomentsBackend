@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CustomStorageLibrary.App.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.DB;
 using SharedMomentsBackend.App.Models.DTOs;

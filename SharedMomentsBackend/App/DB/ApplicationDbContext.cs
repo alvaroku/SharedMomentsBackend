@@ -1,13 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EncryptifyLibrary.App.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.Models.Entities;
 
 namespace SharedMomentsBackend.App.DB
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        IEncryptService _encryptService;
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options,IEncryptService encryptService)
            : base(options)
         {
+            _encryptService = encryptService;
         }
         public DbSet<Album>Albums { get; set; }
         public DbSet<AlbumUser> AlbumUsers { get; set; }
@@ -16,7 +19,7 @@ namespace SharedMomentsBackend.App.DB
         public DbSet<Resource> Resources { get; set; }
         public DbSet<Role>Roles { get; set; }
         public DbSet<User> Users { get; set; }
-
+        public DbSet<MomentUser> MomentUsers { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -37,7 +40,7 @@ namespace SharedMomentsBackend.App.DB
                     Id = adminUserId, 
                     Name = "Alvaro Kú", 
                     Email = "alvaroku123@gmail.com", 
-                    PasswordHash =Utils.HashPassword("hashed_password"),
+                    PasswordHash = _encryptService.Encrypt("hashed_password"),
                     RoleId = adminRoleId,
                     PhoneNumber = "9919596720",
                     DateOfBirth = new DateTime(2000, 05, 23)

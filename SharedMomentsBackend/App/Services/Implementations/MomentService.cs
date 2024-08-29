@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CustomStorageLibrary.App.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.DB;
 using SharedMomentsBackend.App.Models.DTOs;
@@ -66,8 +67,16 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 foreach (ResourceRequest res in resources)
                 {
                     string srcName = count == 0 ? $"{request.Title.Replace(" ", "")}" : $"{request.Title.Replace(" ", "")}_{count}";
-                    Resource newResource = await _resourceManager.UploadFile(
+                    CustomStorageLibrary.App.Models.Resource resource = await _resourceManager.UploadFile(
                     res.Stream, "moments", res.ContentType, srcName, res.Extension);
+                    Resource newResource = new Resource
+                    {
+                        Name = resource.Name,
+                        Url = resource.Url,
+                        Extension = resource.Extension,
+                        Path = resource.Path,
+                        Size = resource.Size, 
+                    };
                     _resources.Add(new MomentResource { Resource = newResource });
                     count++;
                 }
@@ -153,8 +162,17 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 foreach (ResourceRequest res in resources)
                 {
                     string srcName = count == 0 ? $"{request.Title.Replace(" ", "")}" : $"{request.Title.Replace(" ", "")}_{count}";
-                    Resource newResource = await _resourceManager.UploadFile(
+                    CustomStorageLibrary.App.Models.Resource resource = await _resourceManager.UploadFile(
                     res.Stream, "moments", res.ContentType, srcName, res.Extension);
+
+                    Resource newResource = new Resource
+                    {
+                        Name = resource.Name,
+                        Url = resource.Url,
+                        Extension = resource.Extension,
+                        Path = resource.Path,
+                        Size = resource.Size,
+                    };
                     moment.MomentResources.Add(new MomentResource { Resource = newResource });
                     count++;
                 }

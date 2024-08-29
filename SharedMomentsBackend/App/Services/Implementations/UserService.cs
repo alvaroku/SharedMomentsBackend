@@ -1,13 +1,12 @@
-﻿using AutoMapper;
+﻿using AuthManagerLibrary.App.Definitions;
+using AuthManagerLibrary.App.Models;
+using AutoMapper;
+using EncryptifyLibrary.App.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using SharedMomentsBackend.App.DB;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.Entities;
 using SharedMomentsBackend.App.Services.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace SharedMomentsBackend.App.Services.Implementations
 {
@@ -16,16 +15,25 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IConfiguration _configuration;
         ApplicationDbContext _dbContext;
         private readonly IMapper _mapper;
-        public UserService(ApplicationDbContext dbContext,IConfiguration configuration, IMapper mapper) 
+        private IEncryptService _encryptService;
+        private IAuthenticationService _authenticationService;
+        public UserService(
+            ApplicationDbContext dbContext,
+            IConfiguration configuration,
+            IMapper mapper,
+            IEncryptService encryptService,
+            IAuthenticationService authenticationService)
         {
             _dbContext = dbContext;
             _configuration = configuration;
             _mapper = mapper;
+            _encryptService = encryptService;
+            _authenticationService = authenticationService;
         }
-        public async Task<ResultPattern<LoginResponse>> Login(LoginRequest  request)
+        public async Task<ResultPattern<LoginResponse>> Login(LoginRequest request)
         {
             ResultPattern<LoginResponse> response = new ResultPattern<LoginResponse>();
-            request.Password = Utils.HashPassword(request.Password);
+            request.Password = _encryptService.Encrypt(request.Password);
             bool existUser = await _dbContext.Users.AnyAsync(x => x.Email.Equals(request.Email) && x.PasswordHash.Equals(request.Password));
             if (!existUser)
             {
@@ -36,7 +44,11 @@ namespace SharedMomentsBackend.App.Services.Implementations
             }
             User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email.Equals(request.Email) && x.PasswordHash.Equals(request.Password));
             response.Data = _mapper.Map<LoginResponse>(user);
-            response.Data.Token = GetToken(user.Id, user.Email);    
+            response.Data.Token = _authenticationService.Authenticate(new AuthenticationDataRequest
+            {
+                UserId = user.Id.ToString(),
+                UserName = user.Name
+            });
             return response;
         }
 
@@ -60,7 +72,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
 
-            request.PasswordHash = Utils.HashPassword(request.PasswordHash);
+            request.PasswordHash = _encryptService.Encrypt(request.PasswordHash);
             if (!request.RoleId.HasValue)
             {
                 request.RoleId = await _dbContext.Roles.Where(x => x.Name.Equals("User")).Select(x => x.Id).FirstOrDefaultAsync();
@@ -70,41 +82,12 @@ namespace SharedMomentsBackend.App.Services.Implementations
             await _dbContext.SaveChangesAsync();
             response.Data = _mapper.Map<UserResponse>(user);
             response.Message = "Usuario registrado correctamente.";
-            response.Data.Token = GetToken(user.Id, user.Email);
-            return response;
-        }
-
-        public string GetToken(Guid userId, string userName)
-        {
-            string issuer = _configuration["Jwt:Issuer"];
-            string audience = _configuration["Jwt:Audience"];
-            byte[] key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
-            SigningCredentials signingCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha512Signature
-                                );
-            ClaimsIdentity subject = new ClaimsIdentity(new[]
+            response.Data.Token = _authenticationService.Authenticate(new AuthenticationDataRequest
             {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Name, userName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, userName)
+                UserId = user.Id.ToString(),
+                UserName = user.Name
             });
-
-            DateTime expires = DateTime.UtcNow.AddHours(-6).AddHours(8);
-
-            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = subject,
-                Expires = expires,
-                Issuer = issuer,
-                Audience = audience,
-                SigningCredentials = signingCredentials
-            };
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-            string jwtToken = tokenHandler.WriteToken(token);
-            return jwtToken;
+            return response;
         }
     }
 }

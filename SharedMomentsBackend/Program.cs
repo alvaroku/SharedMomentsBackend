@@ -1,3 +1,7 @@
+using AuthManagerLibrary.App;
+using CustomStorageLibrary.App;
+using EmailSenderLibrary.App;
+using EncryptifyLibrary.App;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -28,7 +32,10 @@ builder.Services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
            .AllowAnyHeader();
 }));
 
-
+builder.Services.AddResourceManager(builder.Configuration);
+builder.Services.AddAuthenticationManager(builder.Configuration);
+builder.Services.AddEmailSender(builder.Configuration);
+builder.Services.AddEncryptify();
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -61,27 +68,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configurar servicios de autenticación JWT
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(o =>
-{
-    o.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-    };
-}); ;//bearer
-builder.Services.AddAuthorization();
-
+ 
 
 // Configurar AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
@@ -89,9 +76,8 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 // Registrar servicios
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMomentService, MomentService>();
-builder.Services.AddScoped<IResourceManager, ResourceManager>();
 builder.Services.AddScoped<IResourceService, ResourceService>();
-builder.Services.AddScoped<IEmailSender, EmailSender>();
+
 var app = builder.Build();
 
 app.UseCors("MyPolicy");
