@@ -2,6 +2,7 @@
 using CustomStorageLibrary.App.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.DB;
+using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.Entities;
 using SharedMomentsBackend.App.Services.Interfaces;
@@ -10,40 +11,58 @@ namespace SharedMomentsBackend.App.Services.Implementations
 {
     public class MomentService : IMomentService
     {
-        IConfiguration _configuration;
-        ApplicationDbContext _dbContext;
         private readonly IMapper _mapper;
         IResourceManager _resourceManager;
-        public MomentService(ApplicationDbContext dbContext, IConfiguration configuration, IMapper mapper, IResourceManager resourceManager)
+        IMomentRepository _momentRepository;
+        IResourceRepository _resourceRepository;
+        IMomentResourceRepository _momentResourceRepository;
+
+        public MomentService(
+            IMapper mapper, 
+            IResourceManager resourceManager,
+            IMomentRepository momentRepository, 
+            IResourceRepository resourceRepository,
+            IMomentResourceRepository momentResourceRepository)
         {
-            _dbContext = dbContext;
-            _configuration = configuration;
+
             _mapper = mapper;
             _resourceManager = resourceManager;
+            _momentRepository = momentRepository;
+            _resourceRepository = resourceRepository;
+            _momentResourceRepository = momentResourceRepository;
         }
 
-        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(DefaultFilterParams filterParams)
+        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterUserParams filterParams)
         {
             ResultPattern<PaginateResponse<MomentResponse>> result = new ResultPattern<PaginateResponse<MomentResponse>>();
 
             PaginateResponse<MomentResponse> paginateResult = new PaginateResponse<MomentResponse>();
 
-            paginateResult.List = await _dbContext.Moments.Select(x => new MomentResponse
+            PaginateResponse<Moment> resultData = await _momentRepository.GetMoments(filterParams, $"{nameof(Moment.MomentResources)}.{nameof(Resource)}");
+
+            paginateResult.List = resultData.List.Select(x => new MomentResponse
             {
                 Id = x.Id,
                 Title = x.Title,
                 Description = x.Description,
                 Date = x.Date,
                 Place = x.Place,
+                OwnerId = x.OwnerId,
                 Resources = x.MomentResources.Select(x => new ResourceResponse
                 {
                     Id = x.Resource.Id,
                     Url = x.Resource.Url,
                     Extension = x.Resource.Extension
-                }).ToList()
-            }).ToListAsync();
+                })
+            });
+
+            paginateResult.PageNumber = resultData.PageNumber;
+            paginateResult.PageSize = resultData.PageSize;
+            paginateResult.TotalRecords = resultData.TotalRecords;
+            paginateResult.TotalPages = resultData.TotalPages;
 
             result.Data = paginateResult;
+
             return result;
         }
 
@@ -52,7 +71,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             ResultPattern<MomentResponse> response = new ResultPattern<MomentResponse>();
             Moment moment = _mapper.Map<Moment>(request);
 
-            if (await _dbContext.Moments.AnyAsync(x => x.Title == request.Title))
+            if (await _momentRepository.Exists(x => x.Title == request.Title))
             {
                 response.Message = "El título del momento ya está en uso.";
                 response.StatusCode = 409; // Código de estado 409 Conflict
@@ -75,7 +94,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                         Url = resource.Url,
                         Extension = resource.Extension,
                         Path = resource.Path,
-                        Size = resource.Size, 
+                        Size = resource.Size,
                     };
                     _resources.Add(new MomentResource { Resource = newResource });
                     count++;
@@ -83,8 +102,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 moment.MomentResources = _resources;
             }
 
-            await _dbContext.Moments.AddAsync(moment);
-            await _dbContext.SaveChangesAsync();
+            await _momentRepository.Add(moment);
+
             response.Data = new MomentResponse
             {
                 Id = moment.Id,
@@ -92,6 +111,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Description = moment.Description,
                 Date = moment.Date,
                 Place = moment.Place,
+                OwnerId = moment.OwnerId,
                 Resources = moment.MomentResources.Select(x => new ResourceResponse
                 {
                     Id = x.Resource.Id,
@@ -105,7 +125,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         public async Task<ResultPattern<MomentResponse>> GetMoment(Guid id)
         {
             ResultPattern<MomentResponse> response = new ResultPattern<MomentResponse>();
-            bool exist = await _dbContext.Moments.AnyAsync(x => x.Id == id);
+            bool exist = await _momentRepository.Exists(x => x.Id == id);
             if (!exist)
             {
                 response.Message = "Momento no encontrado.";
@@ -113,9 +133,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 response.IsSuccess = false;
                 return response;
             }
-            Moment moment = await _dbContext.Moments
-                .Include(x => x.MomentResources)
-                .ThenInclude(z => z.Resource).FirstAsync(x => x.Id == id);
+            Moment moment = await _momentRepository.GetById(id, $"{nameof(Moment.MomentResources)}.{nameof(Resource)}");
             response.Data = new MomentResponse
             {
                 Id = moment.Id,
@@ -123,6 +141,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Description = moment.Description,
                 Date = moment.Date,
                 Place = moment.Place,
+                OwnerId = moment.OwnerId,
                 Resources = moment.MomentResources.Select(x => new ResourceResponse
                 {
                     Id = x.Resource.Id,
@@ -137,7 +156,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         {
             ResultPattern<MomentResponse> response = new ResultPattern<MomentResponse>();
 
-            bool exist = await _dbContext.Moments.AnyAsync(x => x.Id == id);
+            bool exist = await _momentRepository.Exists(x => x.Id == id);
             if (!exist)
             {
                 response.Message = "Momento no encontrado.";
@@ -145,16 +164,15 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 response.IsSuccess = false;
                 return response;
             }
-            if (await _dbContext.Moments.AnyAsync(x => x.Title == request.Title && x.Id != id))
+            if (await _momentRepository.Exists(x => x.Title == request.Title && x.Id != id))
             {
                 response.Message = "El título del momento ya está en uso.";
                 response.StatusCode = 409; // Código de estado 409 Conflict
                 response.IsSuccess = false;
                 return response;
             }
-            Moment moment = await _dbContext.Moments
-                .Include(x => x.MomentResources)
-                .ThenInclude(z => z.Resource).FirstAsync(x => x.Id == id);
+
+            Moment moment = await _momentRepository.GetById(id, $"{nameof(Moment.MomentResources)}.{nameof(Resource)}");
 
             if (resources.Any())
             {
@@ -185,8 +203,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             moment.UpdatedAt = DateTime.UtcNow;
 
-            _dbContext.Moments.Update(moment);
-            await _dbContext.SaveChangesAsync();
+            await _momentRepository.Update(moment);
+
             response.Data = new MomentResponse
             {
                 Id = moment.Id,
@@ -194,6 +212,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Description = moment.Description,
                 Date = moment.Date,
                 Place = moment.Place,
+                OwnerId = moment.OwnerId,
                 Resources = moment.MomentResources.Select(x => new ResourceResponse
                 {
                     Id = x.Resource.Id,
@@ -208,7 +227,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         public async Task<ResultPattern<bool>> DeleteMoment(Guid id)
         {
             ResultPattern<bool> response = new ResultPattern<bool>();
-            bool exist = await _dbContext.Moments.AnyAsync(x => x.Id == id);
+            bool exist = await _momentRepository.Exists(x => x.Id == id);
             if (!exist)
             {
                 response.Message = "Momento no encontrado.";
@@ -216,10 +235,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 response.IsSuccess = false;
                 return response;
             }
-            Moment moment = await _dbContext.Moments
-                .Include(x => x.MomentResources)
-                .ThenInclude(z => z.Resource)
-                .FirstAsync(x => x.Id == id);
+            Moment moment = await _momentRepository.GetById(id, $"{nameof(Moment.MomentResources)}.{nameof(Resource)}");
 
             IEnumerable<Resource> res = moment.MomentResources.Select(x => x.Resource);
 
@@ -228,10 +244,10 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 await _resourceManager.DeleteFile("moments", r.Name, r.Extension);
             }
 
-            _dbContext.Resources.RemoveRange(res);
-            _dbContext.Moments.Remove(moment);
+            await _resourceRepository.DeleteRange(res);
 
-            await _dbContext.SaveChangesAsync();
+            await _momentRepository.Delete(moment.Id);
+
             response.Data = true;
             response.Message = "Momento eliminado correctamente.";
             return response;
@@ -239,13 +255,12 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
         public async Task<int> MaxNumerationResource(Guid momentId)
         {
-            if (!await _dbContext.MomentResources.AnyAsync(x => x.MomentId == momentId))
+            if (!await _momentResourceRepository.Exists(x => x.MomentId == momentId))
             {
                 return -1;
             }
-            var maxNumber = _dbContext.MomentResources
-                .Include(r => r.Resource)
-                .Where(x => x.MomentId == momentId)
+            IEnumerable<MomentResource> moments = await _momentResourceRepository.GetAll(filter: x => x.MomentId == momentId, includeProperties: $"{nameof(MomentResource.Resource)}");
+            var maxNumber = moments
                 .Select(r => r.Resource.Name).ToList()
                 .Where(name => name.Contains('_')).ToList()
                 .Select(name => name.Split("_".ToCharArray())[1])

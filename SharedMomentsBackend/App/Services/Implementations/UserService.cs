@@ -2,39 +2,39 @@
 using AuthManagerLibrary.App.Models;
 using AutoMapper;
 using EncryptifyLibrary.App.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using SharedMomentsBackend.App.DB;
+using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.Entities;
+using SharedMomentsBackend.App.Models.Entities.Security;
 using SharedMomentsBackend.App.Services.Interfaces;
 
 namespace SharedMomentsBackend.App.Services.Implementations
 {
     public class UserService : IUserService
     {
-        IConfiguration _configuration;
-        ApplicationDbContext _dbContext;
         private readonly IMapper _mapper;
         private IEncryptService _encryptService;
         private IAuthenticationService _authenticationService;
+        IUserRepository _userRepository;
+        IRoleRepository _roleRepository;
         public UserService(
-            ApplicationDbContext dbContext,
-            IConfiguration configuration,
+            IUserRepository userRepository,
             IMapper mapper,
             IEncryptService encryptService,
-            IAuthenticationService authenticationService)
+            IAuthenticationService authenticationService,
+            IRoleRepository roleRepository)
         {
-            _dbContext = dbContext;
-            _configuration = configuration;
+            _userRepository = userRepository;
             _mapper = mapper;
             _encryptService = encryptService;
             _authenticationService = authenticationService;
+            _roleRepository = roleRepository;
         }
         public async Task<ResultPattern<LoginResponse>> Login(LoginRequest request)
         {
             ResultPattern<LoginResponse> response = new ResultPattern<LoginResponse>();
             request.Password = _encryptService.Encrypt(request.Password);
-            bool existUser = await _dbContext.Users.AnyAsync(x => x.Email.Equals(request.Email) && x.PasswordHash.Equals(request.Password));
+            bool existUser = await _userRepository.Exists(x => x.Email.Equals(request.Email) && x.PasswordHash.Equals(request.Password));
             if (!existUser)
             {
                 response.Message = "Correo o contraseña incorrectos.";
@@ -42,7 +42,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 response.StatusCode = 401;
                 return response;
             }
-            User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email.Equals(request.Email) && x.PasswordHash.Equals(request.Password));
+            User user = await _userRepository.Login(request);
             response.Data = _mapper.Map<LoginResponse>(user);
             response.Data.Token = _authenticationService.Authenticate(new AuthenticationDataRequest
             {
@@ -56,7 +56,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         {
             ResultPattern<UserResponse> response = new ResultPattern<UserResponse>();
 
-            if (await _dbContext.Users.AnyAsync(x => x.Email == request.Email))
+            if (await _userRepository.Exists(x => x.Email == request.Email))
             {
                 response.Message = "El correo ingresado ya está en uso.";
                 response.StatusCode = 409; // Código de estado 409 Conflict
@@ -64,7 +64,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
 
-            if (await _dbContext.Users.AnyAsync(x => x.PhoneNumber == request.PhoneNumber))
+            if (await _userRepository.Exists(x => x.PhoneNumber == request.PhoneNumber))
             {
                 response.Message = "El teléfono ingresado ya está en uso.";
                 response.StatusCode = 409; // Código de estado 409 Conflict
@@ -75,11 +75,12 @@ namespace SharedMomentsBackend.App.Services.Implementations
             request.PasswordHash = _encryptService.Encrypt(request.PasswordHash);
             if (!request.RoleId.HasValue)
             {
-                request.RoleId = await _dbContext.Roles.Where(x => x.Name.Equals("User")).Select(x => x.Id).FirstOrDefaultAsync();
+                Role role = await _roleRepository.GetFirstOrDefault(x => x.Name.Equals("User"));
+                request.RoleId = role.Id;
             }
             User user = _mapper.Map<User>(request);
-            await _dbContext.Users.AddAsync(user);
-            await _dbContext.SaveChangesAsync();
+            await _userRepository.Add(user);
+
             response.Data = _mapper.Map<UserResponse>(user);
             response.Message = "Usuario registrado correctamente.";
             response.Data.Token = _authenticationService.Authenticate(new AuthenticationDataRequest

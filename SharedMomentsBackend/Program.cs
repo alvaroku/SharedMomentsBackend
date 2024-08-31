@@ -2,15 +2,10 @@ using AuthManagerLibrary.App;
 using CustomStorageLibrary.App;
 using EmailSenderLibrary.App;
 using EncryptifyLibrary.App;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SharedMomentsBackend.App.DB;
-using SharedMomentsBackend.App.Services.Implementations;
-using SharedMomentsBackend.App.Services.Interfaces;
-using System.Text;
+using SharedMomentsBackend.App.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +17,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-          options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+          options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).EnableSensitiveDataLogging());
 
 // Add Cors for api access
 builder.Services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
@@ -68,15 +63,11 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
- 
-
 // Configurar AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 // Registrar servicios
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IMomentService, MomentService>();
-builder.Services.AddScoped<IResourceService, ResourceService>();
+builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 

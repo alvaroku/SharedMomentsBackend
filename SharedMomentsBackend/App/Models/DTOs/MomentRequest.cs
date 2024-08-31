@@ -6,7 +6,7 @@
         public string Description { get; set; }
         public DateTime Date { get; set; }
         public string Place { get; set; }
-        public Guid? UserId { get; set; }
+        public Guid OwnerId { get; set; }
         public Guid? AlbumId { get; set; }
     }
 }

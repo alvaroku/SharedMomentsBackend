@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Services.Interfaces;
@@ -21,7 +22,9 @@ namespace SharedMomentsBackend.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(int pageNumber, int pageSize, string? search, bool? status)
         {
-            DefaultFilterParams filters = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            FilterUserParams filters = new FilterUserParams { OwnerId = userId  , PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
             ResultPattern<PaginateResponse<MomentResponse>>
                 result = await _momentService.GetMoments(filters);
             return StatusCode(result.StatusCode, result);
@@ -63,7 +66,7 @@ namespace SharedMomentsBackend.Controllers
                     Resources.AddRange(fileParamsArray);
                 }
                 Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                request.UserId = Guid.Parse(userIdClaim.Value);
+                request.OwnerId = Guid.Parse(userIdClaim.Value);
                 ResultPattern<MomentResponse> result = await _momentService.CreateMoment(request, Resources);
 
                 return StatusCode(result.StatusCode, result);
@@ -104,7 +107,7 @@ namespace SharedMomentsBackend.Controllers
                 Resources.AddRange(fileParamsArray);
             }
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            request.UserId = Guid.Parse(userIdClaim.Value);
+            request.OwnerId = Guid.Parse(userIdClaim.Value);
             ResultPattern<MomentResponse> result = await _momentService.UpdateMoment(id, request, Resources);
 
             return StatusCode(result.StatusCode, result);

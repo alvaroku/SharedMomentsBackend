@@ -1,4 +1,6 @@
-﻿namespace SharedMomentsBackend.App.Models.Entities
+﻿using SharedMomentsBackend.App.Models.Entities.Security;
+
+namespace SharedMomentsBackend.App.Models.Entities
 {
     public class User:BaseEntity
     {

@@ -3,8 +3,9 @@
     public class PaginateResponse<T>
     {
         public IEnumerable<T> List { get; set; } = Enumerable.Empty<T>();
-        public int Total { get; set; }
-        public int Page { get; set; }
-        public int Take { get; set; }
+        public int TotalRecords { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages { get; set;}
     }
 }
