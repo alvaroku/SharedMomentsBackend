@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
 using CustomStorageLibrary.App.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using SharedMomentsBackend.App.DB;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.DTOs.Moment;
@@ -20,9 +18,9 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IMomentResourceRepository _momentResourceRepository;
 
         public MomentService(
-            IMapper mapper, 
+            IMapper mapper,
             IResourceManager resourceManager,
-            IMomentRepository momentRepository, 
+            IMomentRepository momentRepository,
             IResourceRepository resourceRepository,
             IMomentResourceRepository momentResourceRepository)
         {
