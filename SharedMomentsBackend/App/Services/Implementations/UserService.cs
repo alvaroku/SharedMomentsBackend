@@ -4,6 +4,7 @@ using AutoMapper;
 using EncryptifyLibrary.App.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
+using SharedMomentsBackend.App.Models.DTOs.User;
 using SharedMomentsBackend.App.Models.Entities;
 using SharedMomentsBackend.App.Models.Entities.Security;
 using SharedMomentsBackend.App.Services.Interfaces;

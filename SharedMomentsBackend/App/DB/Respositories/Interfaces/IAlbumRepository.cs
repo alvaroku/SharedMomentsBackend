@@ -1,11 +1,9 @@
 ﻿using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
-using SharedMomentsBackend.App.Models.DTOs.User;
 using SharedMomentsBackend.App.Models.Entities;
 
 namespace SharedMomentsBackend.App.DB.Respositories.Interfaces
 {
-    public interface IUserRepository : IGenericRepository<User>
+    public interface IAlbumRepository : IGenericRepository<Album>
     {
-        Task<User> Login(LoginRequest loginRequest);
     }
 }

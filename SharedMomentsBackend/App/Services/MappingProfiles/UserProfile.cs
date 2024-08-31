@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using SharedMomentsBackend.App.Models.DTOs;
+using SharedMomentsBackend.App.Models.DTOs.User;
 using SharedMomentsBackend.App.Models.Entities;
 
 namespace SharedMomentsBackend.App.Services.MappingProfiles

@@ -1,4 +1,6 @@
-﻿namespace SharedMomentsBackend.App.Models.DTOs
+﻿using SharedMomentsBackend.App.Models.DTOs.Resource;
+
+namespace SharedMomentsBackend.App.Models.DTOs.Moment
 {
     public class MomentResponse
     {

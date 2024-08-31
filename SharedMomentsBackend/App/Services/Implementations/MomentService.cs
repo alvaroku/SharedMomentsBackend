@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.DB;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
+using SharedMomentsBackend.App.Models.DTOs.Moment;
+using SharedMomentsBackend.App.Models.DTOs.Resource;
 using SharedMomentsBackend.App.Models.Entities;
 using SharedMomentsBackend.App.Services.Interfaces;
 
@@ -32,7 +34,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _momentResourceRepository = momentResourceRepository;
         }
 
-        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterUserParams filterParams)
+        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterOwnerParams filterParams)
         {
             ResultPattern<PaginateResponse<MomentResponse>> result = new ResultPattern<PaginateResponse<MomentResponse>>();
 

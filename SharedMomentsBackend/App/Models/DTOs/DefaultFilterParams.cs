@@ -5,8 +5,4 @@
         public string Search { get; set; }
         public bool? Status { get; set; }
     }
-    public class FilterUserParams: DefaultFilterParams
-    {
-        public Guid OwnerId { get; set; }
-    }
 }

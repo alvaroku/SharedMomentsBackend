@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SharedMomentsBackend.App.Models.DTOs;
+using SharedMomentsBackend.App.Models.DTOs.Moment;
+using SharedMomentsBackend.App.Models.DTOs.Resource;
 using SharedMomentsBackend.App.Services.Interfaces;
 using System.Security.Claims;
 
@@ -24,7 +26,7 @@ namespace SharedMomentsBackend.Controllers
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid userId = Guid.Parse(userIdClaim.Value);
-            FilterUserParams filters = new FilterUserParams { OwnerId = userId  , PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
+            FilterOwnerParams filters = new FilterOwnerParams { OwnerId = userId  , PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
             ResultPattern<PaginateResponse<MomentResponse>>
                 result = await _momentService.GetMoments(filters);
             return StatusCode(result.StatusCode, result);

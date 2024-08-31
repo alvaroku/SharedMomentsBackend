@@ -1,4 +1,4 @@
-﻿namespace SharedMomentsBackend.App.Models.DTOs
+﻿namespace SharedMomentsBackend.App.Models.DTOs.Resource
 {
     public class ResourceRequest
     {

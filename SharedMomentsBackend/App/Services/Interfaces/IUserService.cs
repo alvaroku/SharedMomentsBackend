@@ -1,4 +1,5 @@
 ﻿using SharedMomentsBackend.App.Models.DTOs;
+using SharedMomentsBackend.App.Models.DTOs.User;
 
 namespace SharedMomentsBackend.App.Services.Interfaces
 {
