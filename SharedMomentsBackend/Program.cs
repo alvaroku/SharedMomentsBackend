@@ -2,10 +2,12 @@ using AuthManagerLibrary.App;
 using CustomStorageLibrary.App;
 using EmailSenderLibrary.App;
 using EncryptifyLibrary.App;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SharedMomentsBackend.App.DB;
 using SharedMomentsBackend.App.Extensions;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,5 +87,20 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+var supportedCultures = new[]
+{
+ new CultureInfo("en-US"),
+ new CultureInfo("fr"),
+};
+
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("es-ES"),
+    // Formatting numbers, dates, etc.
+    SupportedCultures = supportedCultures,
+    // UI strings that we have localized.
+    SupportedUICultures = supportedCultures
+});
 
 app.Run();
