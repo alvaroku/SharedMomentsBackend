@@ -81,7 +81,47 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             return result;
         }
+        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetSharedWithMe(FilterOwnerParams filterParams)
+        {
+            ResultPattern<PaginateResponse<MomentResponse>> result = new ResultPattern<PaginateResponse<MomentResponse>>();
 
+            PaginateResponse<MomentResponse> paginateResult = new PaginateResponse<MomentResponse>();
+
+            PaginateResponse<MomentUser> resultData = await _momentUserRepository
+                .GetSharedWithMe(filterParams, $"{nameof(MomentUser.Moment)}.{nameof(Moment.MomentResources)}.{nameof(MomentResource.Resource)}," +
+                $"{nameof(MomentUser.Moment)}.{nameof(Moment.Owner)}");
+
+            paginateResult.List = resultData.List.Select(x=>x.Moment).Select(x => new MomentResponse
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Description = x.Description,
+                Date = x.Date,
+                Place = x.Place,
+                OwnerId = x.OwnerId,
+                OwnerName = x.Owner.Name,
+                Resources = x.MomentResources.Select(x => new ResourceResponse
+                {
+                    Id = x.Resource.Id,
+                    Url = x.Resource.Url,
+                    Extension = x.Resource.Extension
+                }),
+                //SharedWith = x.MomentUsers.Select(x => new MomentUserResponse
+                //{
+                //    UserId = x.UserId,
+                //    UserName = x.User.Name
+                //})
+            });
+
+            paginateResult.PageNumber = resultData.PageNumber;
+            paginateResult.PageSize = resultData.PageSize;
+            paginateResult.TotalRecords = resultData.TotalRecords;
+            paginateResult.TotalPages = resultData.TotalPages;
+
+            result.Data = paginateResult;
+
+            return result;
+        }
         public async Task<ResultPattern<MomentResponse>> CreateMoment(MomentRequest request, List<ResourceRequest> resources)
         {
             ResultPattern<MomentResponse> response = new ResultPattern<MomentResponse>();

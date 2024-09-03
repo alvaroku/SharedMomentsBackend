@@ -31,7 +31,16 @@ namespace SharedMomentsBackend.Controllers
                 result = await _momentService.GetMoments(filters);
             return StatusCode(result.StatusCode, result);
         }
-
+        [HttpGet("GetSharedWithMe")]
+        public async Task<IActionResult> GetSharedWithMe(int pageNumber, int pageSize, string? search, bool? status)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            FilterOwnerParams filters = new FilterOwnerParams { OwnerId = userId, PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
+            ResultPattern<PaginateResponse<MomentResponse>>
+                result = await _momentService.GetSharedWithMe(filters);
+            return StatusCode(result.StatusCode, result);
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
