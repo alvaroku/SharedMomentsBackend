@@ -122,5 +122,13 @@ namespace SharedMomentsBackend.Controllers
 
             return StatusCode(result.StatusCode, result);
         }
+
+        [HttpPost("{id}/Share")]
+        public async Task<IActionResult> Share(Guid id, ShareMomentRequest request)
+        {
+            ResultPattern<IEnumerable<ShareMomentResponse>> result = await _momentService.Share(id,request);
+
+            return StatusCode(result.StatusCode, result);
+        }
     }
 }

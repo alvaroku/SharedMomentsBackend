@@ -91,5 +91,18 @@ namespace SharedMomentsBackend.App.Services.Implementations
             });
             return response;
         }
+        public async Task<ResultPattern<IEnumerable<DataDropDown>>> DataDropDownForShareMoment(DefaultFilterParams filterParams, Guid ownerId)
+        {
+            ResultPattern<IEnumerable<DataDropDown>> response = new ResultPattern<IEnumerable<DataDropDown>>();
+
+            IEnumerable<User> users = await _userRepository.GetAll(filter:x=>x.Id!=ownerId);
+
+            response.Data =  users.Select(x => new DataDropDown
+            {
+                Id = x.Id,
+                Label = x.Name
+            });
+            return response;
+        }
     }
 }

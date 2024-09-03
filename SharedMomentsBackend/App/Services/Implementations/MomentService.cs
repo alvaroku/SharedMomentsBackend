@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CustomStorageLibrary.App.Interfaces;
+using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.DTOs.Moment;
@@ -16,13 +17,18 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IMomentRepository _momentRepository;
         IResourceRepository _resourceRepository;
         IMomentResourceRepository _momentResourceRepository;
-
+        IMomentUserRepository _momentUserRepository;
+        IUserRepository _userRepository;
+        IUnitOfWork _unitOfWork;
         public MomentService(
             IMapper mapper,
             IResourceManager resourceManager,
             IMomentRepository momentRepository,
             IResourceRepository resourceRepository,
-            IMomentResourceRepository momentResourceRepository)
+            IMomentResourceRepository momentResourceRepository,
+            IMomentUserRepository momentUserRepository,
+            IUserRepository userRepository,
+            IUnitOfWork unitOfWork)
         {
 
             _mapper = mapper;
@@ -30,6 +36,9 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _momentRepository = momentRepository;
             _resourceRepository = resourceRepository;
             _momentResourceRepository = momentResourceRepository;
+            _momentUserRepository = momentUserRepository;
+            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterOwnerParams filterParams)
@@ -38,8 +47,10 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             PaginateResponse<MomentResponse> paginateResult = new PaginateResponse<MomentResponse>();
 
-            PaginateResponse<Moment> resultData = await _momentRepository.GetMoments(filterParams, $"{nameof(Moment.MomentResources)}.{nameof(Resource)}");
-
+            PaginateResponse<Moment> resultData = await _momentRepository
+                .GetMoments(filterParams, $"{nameof(Moment.MomentResources)}.{nameof(Resource)}," +
+                                          $"{nameof(Moment.MomentUsers)}.{nameof(User)}");
+            
             paginateResult.List = resultData.List.Select(x => new MomentResponse
             {
                 Id = x.Id,
@@ -53,6 +64,11 @@ namespace SharedMomentsBackend.App.Services.Implementations
                     Id = x.Resource.Id,
                     Url = x.Resource.Url,
                     Extension = x.Resource.Extension
+                }),
+                SharedWith = x.MomentUsers.Select(x => new MomentUserResponse
+                {
+                    UserId = x.UserId,
+                    UserName = x.User.Name
                 })
             });
 
@@ -253,6 +269,55 @@ namespace SharedMomentsBackend.App.Services.Implementations
             return response;
         }
 
+        public async Task<ResultPattern<IEnumerable<ShareMomentResponse>>> Share(Guid id, ShareMomentRequest request)
+        {
+            ResultPattern<IEnumerable<ShareMomentResponse>> response = new ResultPattern<IEnumerable<ShareMomentResponse>>();
+            if (!await _momentRepository.Exists(x => x.Id == id))
+            {
+                response.Message = "Momento no encontrado.";
+                response.StatusCode = 404;
+                response.IsSuccess = false;
+                return response;
+            }
+
+            if (request.SharedUsersId.Count() == 0)
+            {
+                response.Message = "Debe seleccionar por lo menos un usuario.";
+                response.StatusCode = 400;
+                response.IsSuccess = false;
+                return response;
+            }
+
+            int countUsers = await _userRepository.Count(u => request.SharedUsersId.Contains(u.Id));
+
+            if (countUsers != request.SharedUsersId.Count())
+            {
+                response.Message = "Uno o más usuarios no existen.";
+                response.StatusCode = 404;
+                response.IsSuccess = false;
+                return response;
+            }
+
+            Moment moment = await _momentRepository.GetById(id, $"{nameof(Moment.MomentUsers)}.{nameof(User)}");
+
+            request.SharedUsersId = request.SharedUsersId.Where(userId => !moment.MomentUsers.Any(mu => mu.UserId == userId)).ToArray();
+
+            request.SharedUsersId.ToList().ForEach(userId =>
+            {
+                moment.MomentUsers.Add(new MomentUser { UserId = userId });
+            });
+
+            await _unitOfWork.Commit();
+
+            moment = await _momentRepository.GetById(id, $"{nameof(Moment.MomentUsers)}.{nameof(User)}");
+            response.Data = moment.MomentUsers.Where(x=>request.SharedUsersId.Contains(x.UserId)).Select(x => new ShareMomentResponse
+            {
+                UserId = x.UserId,
+                UserName = x.User.Name
+            });
+            response.Message = "Momento compartido correctamente.";
+            return response;
+        }
         public async Task<int> MaxNumerationResource(Guid momentId)
         {
             if (!await _momentResourceRepository.Exists(x => x.MomentId == momentId))

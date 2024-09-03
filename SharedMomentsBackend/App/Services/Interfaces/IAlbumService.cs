@@ -11,5 +11,6 @@ namespace SharedMomentsBackend.App.Services.Interfaces
         Task<ResultPattern<MomentResponse>> GetMoment(Guid id);
         Task<ResultPattern<MomentResponse>> UpdateMoment(Guid id, MomentRequest request, List<ResourceRequest> resources);
         Task<ResultPattern<bool>> DeleteMoment(Guid id);
+        Task<ResultPattern<IEnumerable<ShareMomentResponse>>> Share(Guid id, ShareMomentRequest request);
     }
 }

@@ -14,5 +14,6 @@ namespace SharedMomentsBackend.App.Models.DTOs.Moment
         public Guid? AlbumId { get; set; }
         public string? Album { get; set; }
         public IEnumerable<ResourceResponse> Resources { get; set; } = Enumerable.Empty<ResourceResponse>();
+        public IEnumerable<MomentUserResponse> SharedWith { get; set; } = Enumerable.Empty<MomentUserResponse>();
     }
 }

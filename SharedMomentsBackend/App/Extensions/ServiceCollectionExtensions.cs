@@ -21,6 +21,7 @@ namespace SharedMomentsBackend.App.Extensions
             services.AddScoped<IResourceRepository, ResourceRepository>();
             services.AddScoped<IMomentResourceRepository, MomentResourceRepository>();
             services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IMomentUserRepository, MomentUserRepository>();
 
             // Registrar servicios de negocio
             services.AddScoped<IUserService, UserService>();
