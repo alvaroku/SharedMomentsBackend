@@ -358,6 +358,44 @@ namespace SharedMomentsBackend.App.Services.Implementations
             response.Message = "Momento compartido correctamente.";
             return response;
         }
+        public async Task<ResultPattern<bool>> DeleteShare(Guid userId,Guid momentId)
+        {
+            ResultPattern<bool> response = new ResultPattern<bool>();
+
+            bool exist = await _momentRepository.Exists(x => x.Id == momentId);
+            if (!exist)
+            {
+                response.Message = "Momento no encontrado.";
+                response.StatusCode = 404;
+                response.IsSuccess = false;
+                return response;
+            }
+            exist = await _userRepository.Exists(x => x.Id == userId);
+            if (!exist)
+            {
+                response.Message = "Usuario no encontrado.";
+                response.StatusCode = 404;
+                response.IsSuccess = false;
+                return response;
+            }
+
+            exist = await _momentUserRepository.Exists(x => x.UserId == userId && x.MomentId == momentId);
+            if (!exist)
+            {
+                response.Message = "No se encontró relación entre el momento y usuario proporcionado.";
+                response.StatusCode = 404;
+                response.IsSuccess = false;
+                return response;
+            }
+
+            MomentUser momentUser = await _momentUserRepository.GetFirstOrDefault(x => x.UserId == userId && x.MomentId == momentId);
+
+            await _momentUserRepository.Delete(momentUser.Id);
+
+            response.Data = true;
+            response.Message = "El momento se ha dejado de compartir con el usuario.";
+            return response;
+        }
         public async Task<int> MaxNumerationResource(Guid momentId)
         {
             if (!await _momentResourceRepository.Exists(x => x.MomentId == momentId))

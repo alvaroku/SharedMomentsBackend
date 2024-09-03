@@ -139,5 +139,13 @@ namespace SharedMomentsBackend.Controllers
 
             return StatusCode(result.StatusCode, result);
         }
+
+        [HttpDelete("{momentId}/DeleteShare/{userId}")]
+        public async Task<IActionResult> DeleteShare(Guid userId, Guid momentId)
+        {
+            ResultPattern<bool> result = await _momentService.DeleteShare(userId, momentId);
+
+            return StatusCode(result.StatusCode, result);
+        }
     }
 }
