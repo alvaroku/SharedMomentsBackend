@@ -5,8 +5,8 @@ using SharedMomentsBackend.App.Models.Entities;
 
 namespace SharedMomentsBackend.App.DB.Respositories.Interfaces
 {
-    public interface IAlbumRepository : IGenericRepository<Album>
+    public interface IAlbumUserRepository : IGenericRepository<AlbumUser>
     {
-        Task<PaginateResponse<Album>> GetAlbums(FilterOwnerParams filterUser, string includes);
+        Task<PaginateResponse<AlbumUser>> GetSharedWithMe(FilterOwnerParams filterUser, string includes);
     }
 }

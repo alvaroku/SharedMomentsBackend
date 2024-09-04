@@ -1,18 +1,19 @@
 ﻿using SharedMomentsBackend.App.Models.DTOs;
+using SharedMomentsBackend.App.Models.DTOs.Album;
 using SharedMomentsBackend.App.Models.DTOs.Moment;
 using SharedMomentsBackend.App.Models.DTOs.Resource;
 
 namespace SharedMomentsBackend.App.Services.Interfaces
 {
-    public interface IMomentService
+    public interface IAlbumService
     {
-        Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterOwnerParams filterParams);
-        Task<ResultPattern<PaginateResponse<MomentResponse>>> GetSharedWithMe(FilterOwnerParams filterParams);
-        Task<ResultPattern<MomentResponse>> CreateMoment(MomentRequest request, List<ResourceRequest> resources);
-        Task<ResultPattern<MomentResponse>> GetMoment(Guid id);
-        Task<ResultPattern<MomentResponse>> UpdateMoment(Guid id, MomentRequest request, List<ResourceRequest> resources);
-        Task<ResultPattern<bool>> DeleteMoment(Guid id);
-        Task<ResultPattern<IEnumerable<ShareMomentResponse>>> Share(Guid id, ShareMomentRequest request);
-        Task<ResultPattern<bool>> DeleteShare(Guid userId,Guid momentId);
+        Task<ResultPattern<PaginateResponse<AlbumResponse>>> GetAlbums(FilterOwnerParams filterParams);
+        Task<ResultPattern<PaginateResponse<AlbumResponse>>> GetSharedWithMe(FilterOwnerParams filterParams);
+        Task<ResultPattern<AlbumResponse>> CreateAlbum(AlbumRequest request);
+        Task<ResultPattern<AlbumResponse>> GetAlbum(Guid id);
+        Task<ResultPattern<AlbumResponse>> UpdateAlbum(Guid id, AlbumRequest request);
+        Task<ResultPattern<bool>> DeleteAlbum(Guid id);
+        Task<ResultPattern<IEnumerable<ShareAlbumResponse>>> Share(Guid id, ShareAlbumRequest request);
+        Task<ResultPattern<bool>> DeleteShare(Guid userId, Guid momentId);
     }
 }

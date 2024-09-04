@@ -9,26 +9,27 @@ using SharedMomentsBackend.App.Extensions;
 
 namespace SharedMomentsBackend.App.DB.Respositories.Implementations
 {
-    public class AlbumRepository : GenericRepository<Album>, IAlbumRepository
+    public class AlbumUserRepository : GenericRepository<AlbumUser>, IAlbumUserRepository
     {
-        public AlbumRepository(IUnitOfWork context) : base(context)
+        public AlbumUserRepository(IUnitOfWork context) : base(context)
         {
+
         }
-        public async Task<PaginateResponse<Album>> GetAlbums(FilterOwnerParams filterUser, string includes)
+        public async Task<PaginateResponse<AlbumUser>> GetSharedWithMe(FilterOwnerParams filterUser, string includes)
         {
             return await GetPaginate(GetExpression(filterUser), filterUser, includes);
         }
-        private Expression<Func<Album, bool>> GetExpression(FilterOwnerParams defaultFilter)
+        private Expression<Func<AlbumUser, bool>> GetExpression(FilterOwnerParams defaultFilter)
         {
-            Expression<Func<Album, bool>> filter = x => x.OwnerId.Equals(defaultFilter.OwnerId);
+            Expression<Func<AlbumUser, bool>> filter = x => x.UserId.Equals(defaultFilter.OwnerId);
 
             if (!string.IsNullOrWhiteSpace(defaultFilter.Search))
             {
-                filter = filter.And(x => x.Name.ToLower().Contains(defaultFilter.Search.ToLower()));
+                filter = filter.And(x => x.Album.Name.ToLower().Contains(defaultFilter.Search.ToLower()));
             }
             if (defaultFilter.Status is not null)
             {
-                filter = filter.And(x => x.IsActive == defaultFilter.Status);
+                filter = filter.And(x => x.Album.IsActive == defaultFilter.Status);
             }
             return filter;
         }

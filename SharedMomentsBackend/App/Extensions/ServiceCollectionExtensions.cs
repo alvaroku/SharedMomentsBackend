@@ -22,12 +22,14 @@ namespace SharedMomentsBackend.App.Extensions
             services.AddScoped<IMomentResourceRepository, MomentResourceRepository>();
             services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IMomentUserRepository, MomentUserRepository>();
+            services.AddScoped<IAlbumRepository, AlbumRepository>();
+            services.AddScoped<IAlbumUserRepository, AlbumUserRepository>();
 
             // Registrar servicios de negocio
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IMomentService, MomentService>();
             services.AddScoped<IResourceService, ResourceService>();
-
+            services.AddScoped<IAlbumService, AlbumService>();
             return services;
         }
     }

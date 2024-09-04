@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CustomStorageLibrary.App.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
+using SharedMomentsBackend.App.DB.Respositories.Implementations;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.DTOs.Moment;
@@ -288,6 +289,14 @@ namespace SharedMomentsBackend.App.Services.Implementations
             {
                 response.Message = "Momento no encontrado.";
                 response.StatusCode = 404;
+                response.IsSuccess = false;
+                return response;
+            }
+
+            if (await _momentUserRepository.Exists(x => x.MomentId == id))
+            {
+                response.Message = "No se puede eliminar un momento compartido. Por favor asegúrese de haber eliminado a todas las personas compartidas.";
+                response.StatusCode = 400;
                 response.IsSuccess = false;
                 return response;
             }

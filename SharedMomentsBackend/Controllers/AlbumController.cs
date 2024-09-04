@@ -1,41 +1,111 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SharedMomentsBackend.App.Models.DTOs;
+using SharedMomentsBackend.App.Models.DTOs.Album;
+using SharedMomentsBackend.App.Models.DTOs.Moment;
+using SharedMomentsBackend.App.Services.Interfaces;
+using System.Security.Claims;
 
 namespace SharedMomentsBackend.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
+
     public class AlbumController : ControllerBase
     {
-        // GET: api/<AlbumController>
+        IAlbumService _albumService;
+        public AlbumController(IAlbumService albumService)
+        {
+            _albumService = albumService;
+        }
+
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IActionResult> Get(int pageNumber, int pageSize, string? search, bool? status)
         {
-            return new string[] { "value1", "value2" };
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            FilterOwnerParams filters = new FilterOwnerParams { OwnerId = userId, PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
+            ResultPattern<PaginateResponse<AlbumResponse>>
+                result = await _albumService.GetAlbums(filters);
+            return StatusCode(result.StatusCode, result);
+        }
+        [HttpGet("GetSharedWithMe")]
+        public async Task<IActionResult> GetSharedWithMe(int pageNumber, int pageSize, string? search, bool? status)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            FilterOwnerParams filters = new FilterOwnerParams { OwnerId = userId, PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
+            ResultPattern<PaginateResponse<AlbumResponse>>
+                result = await _albumService.GetSharedWithMe(filters);
+            return StatusCode(result.StatusCode, result);
         }
 
-        // GET api/<AlbumController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(Guid id)
         {
-            return "value";
+            ResultPattern<AlbumResponse>
+               result = await _albumService.GetAlbum(id);
+            return StatusCode(result.StatusCode, result);
         }
 
-        // POST api/<AlbumController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Post(AlbumRequest request)
         {
+            try
+            {
+
+                Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                request.OwnerId = Guid.Parse(userIdClaim.Value);
+                ResultPattern<AlbumResponse> result = await _albumService.CreateAlbum(request);
+
+                return StatusCode(result.StatusCode, result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResultPattern<MomentResponse>
+                {
+                    IsSuccess = false,
+                    Message = ex.Message,
+                    StatusCode = 500
+                });
+            }
         }
 
         // PUT api/<AlbumController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> Put(Guid id, AlbumRequest request)
         {
+
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            request.OwnerId = Guid.Parse(userIdClaim.Value);
+            ResultPattern<AlbumResponse> result = await _albumService.UpdateAlbum(id, request);
+
+            return StatusCode(result.StatusCode, result);
         }
 
-        // DELETE api/<AlbumController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
+            ResultPattern<bool> result = await _albumService.DeleteAlbum(id);
+
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPost("{id}/Share")]
+        public async Task<IActionResult> Share(Guid id, ShareAlbumRequest request)
+        {
+            ResultPattern<IEnumerable<ShareAlbumResponse>> result = await _albumService.Share(id, request);
+
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpDelete("{momentId}/DeleteShare/{userId}")]
+        public async Task<IActionResult> DeleteShare(Guid userId, Guid momentId)
+        {
+            ResultPattern<bool> result = await _albumService.DeleteShare(userId, momentId);
+
+            return StatusCode(result.StatusCode, result);
         }
     }
 }
