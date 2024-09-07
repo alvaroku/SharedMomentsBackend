@@ -60,6 +60,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Date = x.Date,
                 Place = x.Place,
                 OwnerId = x.OwnerId,
+                AlbumId = x.AlbumId,
                 Resources = x.MomentResources.Select(x => new ResourceResponse
                 {
                     Id = x.Resource.Id,
