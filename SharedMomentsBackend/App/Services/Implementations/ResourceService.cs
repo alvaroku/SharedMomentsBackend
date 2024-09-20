@@ -30,8 +30,11 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 response.StatusCode = 404;
                 return response;
             }
-            Resource resource = await _resourceRepository.GetFirstOrDefault(x => x.Id == id);
-            await _resourceManager.DeleteFile("moments", resource.Name, resource.Extension);
+            Resource resource = await _resourceRepository.GetFirstOrDefault(x => x.Id == id, includeProperties: $"{nameof(Resource.MomentResources)}");
+
+            string path = resource.MomentResources.Any() ? "moments" : "users";
+
+            await _resourceManager.DeleteFile(path, resource.Name, resource.Extension);
 
             await _resourceRepository.Delete(resource.Id);
 

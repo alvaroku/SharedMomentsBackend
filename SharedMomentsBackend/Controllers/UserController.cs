@@ -40,5 +40,24 @@ namespace SharedMomentsBackend.Controllers
             ResultPattern<IEnumerable<DataDropDown>> result = await _userService.DataDropDownForShareMoment(request, OwnerId);
             return StatusCode(result.StatusCode, result);
         }
+
+        [HttpGet("Profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid OwnerId = Guid.Parse(userIdClaim.Value);
+
+            ResultPattern<ProfileResponse> result = await _userService.GetProfile(OwnerId);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPut("Profile")]
+        public async Task<IActionResult> UpdateProfile([FromForm] ProfileRequest profile)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid OwnerId = Guid.Parse(userIdClaim.Value);
+            ResultPattern<ProfileResponse> result = await _userService.UpdateProfile(OwnerId,profile);
+            return StatusCode(result.StatusCode, result);
+        }
     }
 }

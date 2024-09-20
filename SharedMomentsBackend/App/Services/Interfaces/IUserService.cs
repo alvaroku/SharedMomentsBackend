@@ -8,5 +8,7 @@ namespace SharedMomentsBackend.App.Services.Interfaces
         Task<ResultPattern<LoginResponse>> Login(LoginRequest request);
         Task<ResultPattern<UserResponse>> Register(UserRequest request);
         Task<ResultPattern<IEnumerable<DataDropDown>>> DataDropDownForShareMoment(DefaultFilterParams filterParams,Guid ownerId);
+        Task<ResultPattern<ProfileResponse>> GetProfile(Guid userId);
+        Task<ResultPattern<ProfileResponse>> UpdateProfile(Guid userId, ProfileRequest request);
     }
 }
