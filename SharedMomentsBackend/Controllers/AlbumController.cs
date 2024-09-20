@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.DTOs.Album;
 using SharedMomentsBackend.App.Models.DTOs.Moment;
+using SharedMomentsBackend.App.Services.Implementations;
 using SharedMomentsBackend.App.Services.Interfaces;
 using System.Security.Claims;
 
@@ -100,11 +101,22 @@ namespace SharedMomentsBackend.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpDelete("{momentId}/DeleteShare/{userId}")]
-        public async Task<IActionResult> DeleteShare(Guid userId, Guid momentId)
+        [HttpDelete("{albumId}/DeleteShare/{userId}")]
+        public async Task<IActionResult> DeleteShare(Guid userId, Guid albumId)
         {
-            ResultPattern<bool> result = await _albumService.DeleteShare(userId, momentId);
+            ResultPattern<bool> result = await _albumService.DeleteShare(userId, albumId);
 
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpGet("GetMyAlbums")]
+        public async Task<IActionResult> GetMyAlbums(int pageNumber, int pageSize, string? search, bool? status)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid OwnerId = Guid.Parse(userIdClaim.Value);
+
+            DefaultFilterParams request = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status };
+            ResultPattern<IEnumerable<DataDropDown>> result = await _albumService.GetMyAlbums(request, OwnerId);
             return StatusCode(result.StatusCode, result);
         }
     }

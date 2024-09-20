@@ -21,6 +21,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IMomentUserRepository _momentUserRepository;
         IUserRepository _userRepository;
         IUnitOfWork _unitOfWork;
+        IAlbumRepository _albumRepository;
         public MomentService(
             IMapper mapper,
             IResourceManager resourceManager,
@@ -29,7 +30,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             IMomentResourceRepository momentResourceRepository,
             IMomentUserRepository momentUserRepository,
             IUserRepository userRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IAlbumRepository albumRepository)
         {
 
             _mapper = mapper;
@@ -40,9 +42,10 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _momentUserRepository = momentUserRepository;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _albumRepository = albumRepository;
         }
 
-        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterOwnerParams filterParams)
+        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterMomentParams filterParams)
         {
             ResultPattern<PaginateResponse<MomentResponse>> result = new ResultPattern<PaginateResponse<MomentResponse>>();
 
@@ -83,7 +86,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             return result;
         }
-        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetSharedWithMe(FilterOwnerParams filterParams)
+        public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetSharedWithMe(FilterMomentParams filterParams)
         {
             ResultPattern<PaginateResponse<MomentResponse>> result = new ResultPattern<PaginateResponse<MomentResponse>>();
 
@@ -419,6 +422,56 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 .Select(name => name.Split("_".ToCharArray())[1])
                 .Max();
             return maxNumber == null ? 0 : int.Parse(maxNumber);
+        }
+
+        public async Task<ResultPattern<AddToAlbumResponse>> AddToAlbum(AddToAlbumRequest request)
+        {
+            ResultPattern<AddToAlbumResponse> result = new ResultPattern<AddToAlbumResponse>();
+
+            if(!await _momentRepository.Exists(x => x.Id == request.MomentId && x.OwnerId == request.OwnerId))
+            {
+                result.Message = "Momento no encontrado.";
+                result.StatusCode = 404;
+                result.IsSuccess = false;
+                return result;
+            }
+
+            Moment moment = await _momentRepository.GetById(request.MomentId);
+
+            if (!request.AlbumId.HasValue)
+            {
+                moment.AlbumId = null;
+                moment.Album = null;
+                await _unitOfWork.Commit();
+                result.Message = "Momento eliminado del álbum correctamente.";
+                result.Data = new AddToAlbumResponse
+                {
+                    AlbumId = null,
+                };
+                return result;
+            }
+
+            if(!await _albumRepository.Exists(x=>x.Id == request.AlbumId && x.OwnerId==request.OwnerId))
+            {
+                result.Message = "Álbum no encontrado.";
+                result.StatusCode = 404;
+                result.IsSuccess = false;
+                return result;
+            }
+
+            Album album = await _albumRepository.GetById(request.AlbumId.Value);
+            moment.UpdatedAt = DateTime.UtcNow;
+
+            moment.Album = album;
+
+            await _unitOfWork.Commit();
+
+            result.Data = new AddToAlbumResponse
+            {
+               AlbumId = album.Id,
+            };
+            result.Message = "Momento agregado al álbum correctamente.";
+            return result;
         }
     }
 }

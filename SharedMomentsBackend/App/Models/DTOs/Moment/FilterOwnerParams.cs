@@ -4,4 +4,9 @@
     {
         public Guid OwnerId { get; set; }
     }
+    public class FilterMomentParams : FilterOwnerParams
+    {
+        public Guid? AlbumId { get; set; }
+        public bool? HasAlbum { get; set; }
+    }
 }

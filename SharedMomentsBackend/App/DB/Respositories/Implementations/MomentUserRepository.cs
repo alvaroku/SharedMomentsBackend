@@ -15,11 +15,11 @@ namespace SharedMomentsBackend.App.DB.Respositories.Implementations
         {
 
         }
-        public async Task<PaginateResponse<MomentUser>> GetSharedWithMe(FilterOwnerParams filterUser, string includes)
+        public async Task<PaginateResponse<MomentUser>> GetSharedWithMe(FilterMomentParams filterUser, string includes)
         {
             return await GetPaginate(GetExpression(filterUser), filterUser, includes);
         }
-        private Expression<Func<MomentUser, bool>> GetExpression(FilterOwnerParams defaultFilter)
+        private Expression<Func<MomentUser, bool>> GetExpression(FilterMomentParams defaultFilter)
         {
             Expression<Func<MomentUser, bool>> filter = x => x.UserId.Equals(defaultFilter.OwnerId);
 
@@ -30,6 +30,14 @@ namespace SharedMomentsBackend.App.DB.Respositories.Implementations
             if (defaultFilter.Status is not null)
             {
                 filter = filter.And(x => x.Moment.IsActive == defaultFilter.Status);
+            }
+            if (defaultFilter.HasAlbum.HasValue)
+            {
+                filter = filter.And(x => (defaultFilter.HasAlbum.Value) ? x.Moment.AlbumId.HasValue : !x.Moment.AlbumId.HasValue);
+            }
+            if (defaultFilter.AlbumId is not null)
+            {
+                filter = filter.And(x => x.Moment.AlbumId == defaultFilter.AlbumId);
             }
             return filter;
         }

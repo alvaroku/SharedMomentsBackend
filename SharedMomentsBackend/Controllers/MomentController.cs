@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SharedMomentsBackend.App.Models.DTOs;
+using SharedMomentsBackend.App.Models.DTOs.Album;
 using SharedMomentsBackend.App.Models.DTOs.Moment;
 using SharedMomentsBackend.App.Models.DTOs.Resource;
+using SharedMomentsBackend.App.Services.Implementations;
 using SharedMomentsBackend.App.Services.Interfaces;
 using System.Security.Claims;
 
@@ -21,22 +23,47 @@ namespace SharedMomentsBackend.Controllers
             _momentService = momentService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get(int pageNumber, int pageSize, string? search, bool? status)
+        [HttpGet("GetMoments")]
+        public async Task<IActionResult> Get(int pageNumber, int pageSize, string? search, bool? status,bool? hasAlbum,Guid? albumId,Guid? ownerId)
         {
-            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            Guid userId = Guid.Parse(userIdClaim.Value);
-            FilterOwnerParams filters = new FilterOwnerParams { OwnerId = userId  , PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
+           
+            FilterMomentParams filters = new FilterMomentParams 
+            { 
+                PageNumber = pageNumber, 
+                PageSize = pageSize, 
+                Search = search, 
+                Status = status,
+                HasAlbum = hasAlbum,
+                AlbumId = albumId
+            };
+            if (!ownerId.HasValue)
+            {
+                Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                Guid userId = Guid.Parse(userIdClaim.Value);
+                filters.OwnerId = userId;
+            }else
+            {
+                filters.OwnerId = ownerId.Value;
+            }
             ResultPattern<PaginateResponse<MomentResponse>>
                 result = await _momentService.GetMoments(filters);
             return StatusCode(result.StatusCode, result);
         }
         [HttpGet("GetSharedWithMe")]
-        public async Task<IActionResult> GetSharedWithMe(int pageNumber, int pageSize, string? search, bool? status)
+        public async Task<IActionResult> GetSharedWithMe(int pageNumber, int pageSize, string? search, bool? status, bool? hasAlbum, Guid? albumId)
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid userId = Guid.Parse(userIdClaim.Value);
-            FilterOwnerParams filters = new FilterOwnerParams { OwnerId = userId, PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status, };
+            FilterMomentParams filters = new FilterMomentParams 
+            { 
+                OwnerId = userId, 
+                PageNumber = pageNumber, 
+                PageSize = pageSize, 
+                Search = search, 
+                Status = status,
+                HasAlbum = hasAlbum,
+                AlbumId = albumId
+            };
             ResultPattern<PaginateResponse<MomentResponse>>
                 result = await _momentService.GetSharedWithMe(filters);
             return StatusCode(result.StatusCode, result);
@@ -145,6 +172,17 @@ namespace SharedMomentsBackend.Controllers
         {
             ResultPattern<bool> result = await _momentService.DeleteShare(userId, momentId);
 
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPost("AddToAlbum")]
+        public async Task<IActionResult> AddToAlbum(AddToAlbumRequest request)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            request.OwnerId = userId;
+            ResultPattern<AddToAlbumResponse>
+                result = await _momentService.AddToAlbum(request);
             return StatusCode(result.StatusCode, result);
         }
     }

@@ -256,11 +256,11 @@ namespace SharedMomentsBackend.App.Services.Implementations
             response.Message = "Albúm compartido correctamente.";
             return response;
         }
-        public async Task<ResultPattern<bool>> DeleteShare(Guid userId, Guid momentId)
+        public async Task<ResultPattern<bool>> DeleteShare(Guid userId, Guid albumId)
         {
             ResultPattern<bool> response = new ResultPattern<bool>();
 
-            bool exist = await _albumRepository.Exists(x => x.Id == momentId);
+            bool exist = await _albumRepository.Exists(x => x.Id == albumId);
             if (!exist)
             {
                 response.Message = "Albúm no encontrado.";
@@ -277,7 +277,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
 
-            exist = await _albumUserRepository.Exists(x => x.UserId == userId && x.AlbumId == momentId);
+            exist = await _albumUserRepository.Exists(x => x.UserId == userId && x.AlbumId == albumId);
             if (!exist)
             {
                 response.Message = "No se encontró relación entre el albúm y usuario proporcionado.";
@@ -286,12 +286,25 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
 
-            AlbumUser momentUser = await _albumUserRepository.GetFirstOrDefault(x => x.UserId == userId && x.AlbumId == momentId);
+            AlbumUser momentUser = await _albumUserRepository.GetFirstOrDefault(x => x.UserId == userId && x.AlbumId == albumId);
 
             await _albumUserRepository.Delete(momentUser.Id);
 
             response.Data = true;
             response.Message = "El albúm se ha dejado de compartir con el usuario.";
+            return response;
+        }
+        public async Task<ResultPattern<IEnumerable<DataDropDown>>> GetMyAlbums(DefaultFilterParams filterParams, Guid ownerId)
+        {
+            ResultPattern<IEnumerable<DataDropDown>> response = new ResultPattern<IEnumerable<DataDropDown>>();
+
+            IEnumerable<Album> users = await _albumRepository.GetAll(filter: x => x.OwnerId == ownerId);
+
+            response.Data = users.Select(x => new DataDropDown
+            {
+                Id = x.Id,
+                Label = x.Name
+            });
             return response;
         }
     }

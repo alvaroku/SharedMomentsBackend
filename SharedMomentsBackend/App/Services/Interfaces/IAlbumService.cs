@@ -2,6 +2,7 @@
 using SharedMomentsBackend.App.Models.DTOs.Album;
 using SharedMomentsBackend.App.Models.DTOs.Moment;
 using SharedMomentsBackend.App.Models.DTOs.Resource;
+using SharedMomentsBackend.App.Models.Entities;
 
 namespace SharedMomentsBackend.App.Services.Interfaces
 {
@@ -14,6 +15,7 @@ namespace SharedMomentsBackend.App.Services.Interfaces
         Task<ResultPattern<AlbumResponse>> UpdateAlbum(Guid id, AlbumRequest request);
         Task<ResultPattern<bool>> DeleteAlbum(Guid id);
         Task<ResultPattern<IEnumerable<ShareAlbumResponse>>> Share(Guid id, ShareAlbumRequest request);
-        Task<ResultPattern<bool>> DeleteShare(Guid userId, Guid momentId);
+        Task<ResultPattern<bool>> DeleteShare(Guid userId, Guid albumId);
+        Task<ResultPattern<IEnumerable<DataDropDown>>> GetMyAlbums(DefaultFilterParams filterParams, Guid ownerId);
     }
 }

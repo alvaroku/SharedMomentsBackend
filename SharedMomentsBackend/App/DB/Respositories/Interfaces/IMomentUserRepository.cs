@@ -7,6 +7,6 @@ namespace SharedMomentsBackend.App.DB.Respositories.Interfaces
 {
     public interface IMomentUserRepository : IGenericRepository<MomentUser>
     {
-        Task<PaginateResponse<MomentUser>> GetSharedWithMe(FilterOwnerParams filterUser, string includes);
+        Task<PaginateResponse<MomentUser>> GetSharedWithMe(FilterMomentParams filterUser, string includes);
     }
 }
