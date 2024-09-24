@@ -1,9 +1,8 @@
 ﻿namespace SharedMomentsBackend.App.Models.DTOs.User
 {
-    public class AddToFriendsResponse
+    public class UserFriendRequest:DataDropdownUser
     {
-        public Guid UserId { get; set; }
-        public Guid FriendId { get; set; }
         public EFriendRequestStatus? Status { get; set; }
+        public Guid? OwnerId { get; set; }
     }
 }

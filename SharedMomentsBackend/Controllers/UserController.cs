@@ -40,7 +40,7 @@ namespace SharedMomentsBackend.Controllers
             Guid OwnerId = Guid.Parse(userIdClaim.Value);
 
             DefaultFilterParams request = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status };
-            ResultPattern<IEnumerable<DataDropdownUser>> result = await _userService.DataDropDownFriends(request, OwnerId);
+            ResultPattern<IEnumerable<UserFriendRequest>> result = await _userService.DataDropDownFriends(request, OwnerId);
             return StatusCode(result.StatusCode, result);
         }
         [Authorize]
@@ -51,7 +51,7 @@ namespace SharedMomentsBackend.Controllers
             Guid OwnerId = Guid.Parse(userIdClaim.Value);
 
             DefaultFilterParams request = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status };
-            ResultPattern<IEnumerable<DataDropdownUser>> result = await _userService.DataDropDownNoFriends(request, OwnerId);
+            ResultPattern<List<UserFriendRequest>> result = await _userService.DataDropDownNoFriends(request, OwnerId);
             return StatusCode(result.StatusCode, result);
         }
         [Authorize]
@@ -75,26 +75,41 @@ namespace SharedMomentsBackend.Controllers
         }
 
         [Authorize]
-        [HttpPost("AddToFriends")]
-        public async Task<IActionResult> AddToFriends(AddToFriendsRequest request)
+        [HttpPost("SendFriendRequest")]
+        public async Task<IActionResult> SendFriendRequest(AddToFriendsRequest request)
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid OwnerId = Guid.Parse(userIdClaim.Value);
             request.UserId = OwnerId;
-            ResultPattern<AddToFriendsResponse> result = await _userService.AddToFriends(request);
+            ResultPattern<AddToFriendsResponse> result = await _userService.SendFriendRequest(request);
             return StatusCode(result.StatusCode, result);
         }
 
         [Authorize]
-        [HttpDelete("DeleteToFriends/{friendId}")]
-        public async Task<IActionResult> DeleteToFriends(Guid friendId)
+        [HttpPost("AcceptFriendRequest")]
+        public async Task<IActionResult> AcceptFriendRequest(AddToFriendsRequest request)
         {
-            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            Guid OwnerId = Guid.Parse(userIdClaim.Value);
+            ResultPattern<AddToFriendsResponse> result = await _userService.AcceptFriendRequest(request);
+            return StatusCode(result.StatusCode, result);
+        }
 
-            AddToFriendsRequest request = new AddToFriendsRequest { UserId = OwnerId, FriendId = friendId };
+        [Authorize]
+        [HttpDelete("{ownerId}/DeleteFromFriends/{friendId}")]
+        public async Task<IActionResult> DeleteFromFriends(Guid ownerId, Guid friendId)
+        {
+            AddToFriendsRequest request = new AddToFriendsRequest { UserId = ownerId, FriendId = friendId };
 
-            ResultPattern<AddToFriendsResponse> result = await _userService.DeleteToFriends(request);
+            ResultPattern<AddToFriendsResponse> result = await _userService.DeleteFromFriends(request);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [Authorize]
+        [HttpDelete("{ownerId}/DeleteFriendRequest/{friendId}")]
+        public async Task<IActionResult> DeleteFriendRequest(Guid ownerId,Guid friendId)
+        {
+            AddToFriendsRequest request = new AddToFriendsRequest { UserId = ownerId, FriendId = friendId };
+
+            ResultPattern<AddToFriendsResponse> result = await _userService.DeleteFriendRequest(request);
             return StatusCode(result.StatusCode, result);
         }
     }

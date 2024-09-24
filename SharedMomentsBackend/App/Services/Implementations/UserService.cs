@@ -7,13 +7,16 @@ using EncryptifyLibrary.App.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
+using SharedMomentsBackend.App.Models;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.DTOs.Resource;
 using SharedMomentsBackend.App.Models.DTOs.User;
 using SharedMomentsBackend.App.Models.Entities;
 using SharedMomentsBackend.App.Models.Entities.Security;
 using SharedMomentsBackend.App.Services.Interfaces;
- 
+using System.Linq;
+using System.Linq.Expressions;
+
 
 namespace SharedMomentsBackend.App.Services.Implementations
 {
@@ -113,37 +116,59 @@ namespace SharedMomentsBackend.App.Services.Implementations
             });
             return response;
         }
-        public async Task<ResultPattern<IEnumerable<DataDropdownUser>>> DataDropDownFriends(DefaultFilterParams filterParams, Guid currentUserId)
+        Expression<Func<UserFriend, bool>> GetFilterFriends(Guid currentUserId)
         {
-            ResultPattern<IEnumerable<DataDropdownUser>> response = new ResultPattern<IEnumerable<DataDropdownUser>>();
+            return x => (x.UserId == currentUserId || x.FriendId == currentUserId) && x.Status.Equals(EFriendRequestStatus.Accepted);
+        }
+        public async Task<ResultPattern<IEnumerable<UserFriendRequest>>> DataDropDownFriends(DefaultFilterParams filterParams, Guid currentUserId)
+        {
+            ResultPattern<IEnumerable<UserFriendRequest>> response = new ResultPattern<IEnumerable<UserFriendRequest>>();
 
             IEnumerable<UserFriend> users = await _userFriendRepository
-                .GetAll(filter: x => x.UserId == currentUserId, null, $"{nameof(UserFriend.Friend)}.{nameof(User.Profile)}");
+                .GetAll(filter:GetFilterFriends(currentUserId), null, $"{nameof(UserFriend.Friend)}.{nameof(User.Profile)},{nameof(UserFriend.User)}.{nameof(User.Profile)}");
 
-            response.Data =  users.Select(x => new DataDropdownUser
+            response.Data =  users.Select(x => new UserFriendRequest
             {
                 Id = x.FriendId,
-                Label = x.Friend.Name,
-                ProfileUrl = x.Friend.Profile?.Url
+                Label = (x.UserId == currentUserId) ? x.Friend.Name : x.User.Name,
+                ProfileUrl = (x.UserId == currentUserId) ? x.Friend.Profile?.Url : x.User.Profile?.Url,
+                Status = x.Status,
+                OwnerId = x.UserId
             });
             return response;
         }
-        public async Task<ResultPattern<IEnumerable<DataDropdownUser>>> DataDropDownNoFriends(DefaultFilterParams filterParams, Guid currentUserId)
+        public async Task<ResultPattern<List<UserFriendRequest>>> DataDropDownNoFriends(DefaultFilterParams filterParams, Guid currentUserId)
         {
-            ResultPattern<IEnumerable<DataDropdownUser>> response = new ResultPattern<IEnumerable<DataDropdownUser>>();
+            ResultPattern<List<UserFriendRequest>> response = new ResultPattern<List<UserFriendRequest>>();
 
             IQueryable<User> allUsers = _unitOfWork.Context.Users.AsQueryable().Include(x=>x.Profile).Where(x=>x.Id!=currentUserId);
 
-            IQueryable<Guid> friendIds = _unitOfWork.Context.UserFriends.Where(x => x.UserId == currentUserId).Select(x => x.FriendId);
+            IQueryable<Guid> friendIds = _unitOfWork.Context.UserFriends
+                .Where(x=> (x.UserId == currentUserId || x.FriendId == currentUserId))//usuarios que ya les mandé solicitud|que ya me mandaron|que ya son mis amigos independientemente de si ya me aceptaron o no(existe relación en UserFriends)
+                .Select(x => x.UserId == currentUserId ? x.FriendId : x.UserId);//si el userId es igual al currentUserId entonces la solicitud es para el amigo, si no es para el usuario actual
 
-            IQueryable<User> usersNotInFriends = allUsers.Where(x => !friendIds.Contains(x.Id));
+            IQueryable<User> usersNotInFriends = allUsers.Where(x => !friendIds.Contains(x.Id));//usuarios que no les he mandado solicitud(no existe relación en UserFriends)
 
-            response.Data = usersNotInFriends.Select(x => new DataDropdownUser
+            IEnumerable<UserFriend> sentReceivedRequestFriend = await _userFriendRepository
+                .GetAll(x => (x.UserId == currentUserId || x.FriendId == currentUserId) && x.Status == EFriendRequestStatus.Sent,includeProperties:$"{nameof(UserFriend.Friend)}.{nameof(User.Profile)},{nameof(UserFriend.User)}.{nameof(User.Profile)}");//solicitudes pendientes enviadas y recibidas
+
+            response.Data = new List<UserFriendRequest>();
+
+            response.Data.AddRange( usersNotInFriends.Select(x => new UserFriendRequest
             {
                 Id = x.Id,
                 Label = x.Name,
-                ProfileUrl = x.Profile != null ? x.Profile.Url : null
-            });
+                ProfileUrl = x.Profile != null ? x.Profile.Url : null,
+
+            }));
+            response.Data.AddRange(sentReceivedRequestFriend.Select(x=> new UserFriendRequest
+            {
+                Id = x.FriendId,
+                Label = (x.UserId == currentUserId)? x.Friend.Name:x.User.Name,
+                ProfileUrl = (x.UserId == currentUserId) ? x.Friend.Profile?.Url : x.User.Profile?.Url,
+                Status = x.Status,
+                OwnerId = x.UserId
+            }));
             return response;
         }
         public async Task<ResultPattern<ProfileResponse>> GetProfile(Guid userId)
@@ -221,7 +246,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             return response;
         }
 
-        public async Task<ResultPattern<AddToFriendsResponse>> AddToFriends(AddToFriendsRequest request)
+        public async Task<ResultPattern<AddToFriendsResponse>> SendFriendRequest(AddToFriendsRequest request)
         {
             ResultPattern<AddToFriendsResponse> response = new ResultPattern<AddToFriendsResponse>();
             
@@ -234,7 +259,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
 
-            bool isFriend = await _userFriendRepository.Exists(x => x.UserId == request.UserId && x.FriendId == request.FriendId);
+            bool isFriend = await _userFriendRepository.Exists(x => x.UserId == request.UserId && x.FriendId == request.FriendId &&  x.Status.Equals(EFriendRequestStatus.Accepted));
             if (isFriend)
             {
                 response.StatusCode = 409;
@@ -243,23 +268,35 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
 
+            isFriend = await _userFriendRepository.Exists(x => ((x.UserId == request.UserId && x.FriendId == request.FriendId) || (x.UserId == request.FriendId && x.FriendId == request.UserId)) && x.Status.Equals(EFriendRequestStatus.Sent));
+            if (isFriend)
+            {
+                response.StatusCode = 409;
+                response.Message = "Existe una solicitud pendiente, por favor recarga el navegador para visualizarla.";
+                response.IsSuccess = false;
+                return response;
+            }
+
             await _userFriendRepository.Add(new UserFriend
             {
                 UserId = request.UserId,
-                FriendId = request.FriendId
+                FriendId = request.FriendId,
             });
 
             await _unitOfWork.Commit();
 
-            response.Message = "Usuario agregado a tu lista de amigos.";
+            response.Message = "Solicitud de amistad enviada.";
             response.Data = new AddToFriendsResponse 
             {
                 FriendId = request.FriendId,
-                UserId = request.UserId
+                UserId = request.UserId,
+                Status = EFriendRequestStatus.Sent,
+                
             };
             return response;
         }
-        public async Task<ResultPattern<AddToFriendsResponse>> DeleteToFriends(AddToFriendsRequest request)
+
+        public async Task<ResultPattern<AddToFriendsResponse>> AcceptFriendRequest(AddToFriendsRequest request)
         {
             ResultPattern<AddToFriendsResponse> response = new ResultPattern<AddToFriendsResponse>();
 
@@ -272,7 +309,44 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
 
-            bool isFriend = await _userFriendRepository.Exists(x => x.UserId == request.UserId && x.FriendId == request.FriendId);
+            bool isFriend = await _userFriendRepository.Exists(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Sent));
+            if (!isFriend)
+            {
+                response.StatusCode = 409;
+                response.Message = "Solicitud no encontrada.";
+                response.IsSuccess = false;
+                return response;
+            }
+         
+            UserFriend userFriend = await _userFriendRepository.GetFirstOrDefault(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Sent));
+            userFriend.Status = EFriendRequestStatus.Accepted;
+            response.Data = new AddToFriendsResponse
+            {
+                FriendId = userFriend.FriendId,
+                UserId = userFriend.UserId,
+                Status = userFriend.Status
+            };
+
+            await _unitOfWork.Commit();
+
+            response.Message = "Solicitud aceptada.";
+
+            return response;
+        }
+        public async Task<ResultPattern<AddToFriendsResponse>> DeleteFromFriends(AddToFriendsRequest request)
+        {
+            ResultPattern<AddToFriendsResponse> response = new ResultPattern<AddToFriendsResponse>();
+
+            bool userExist = await _userRepository.Exists(x => x.Id == request.FriendId);
+            if (!userExist)
+            {
+                response.StatusCode = 404;
+                response.Message = "Usuario no encontrado.";
+                response.IsSuccess = false;
+                return response;
+            }
+
+            bool isFriend = await _userFriendRepository.Exists(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Accepted));
             if (!isFriend)
             {
                 response.StatusCode = 409;
@@ -283,16 +357,55 @@ namespace SharedMomentsBackend.App.Services.Implementations
             response.Data = new AddToFriendsResponse
             {
                 FriendId = request.FriendId,
-                UserId = request.UserId
+                UserId = request.UserId,
+                Status = null
             };
 
-            UserFriend userFriend = await _userFriendRepository.GetFirstOrDefault(x => x.UserId == request.UserId && x.FriendId == request.FriendId);
+            UserFriend userFriend = await _userFriendRepository.GetFirstOrDefault(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Accepted));
             await _userFriendRepository.Delete(userFriend);
 
             await _unitOfWork.Commit();
 
             response.Message = "Usuario eliminado de tu lista de amigos.";
             
+            return response;
+        }
+
+        public async Task<ResultPattern<AddToFriendsResponse>> DeleteFriendRequest(AddToFriendsRequest request)
+        {
+            ResultPattern<AddToFriendsResponse> response = new ResultPattern<AddToFriendsResponse>();
+
+            bool userExist = await _userRepository.Exists(x => x.Id == request.FriendId);
+            if (!userExist)
+            {
+                response.StatusCode = 404;
+                response.Message = "Usuario no encontrado.";
+                response.IsSuccess = false;
+                return response;
+            }
+
+            bool isFriend = await _userFriendRepository.Exists(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Sent));
+            if (!isFriend)
+            {
+                response.StatusCode = 409;
+                response.Message = "No se encontró la solicitud de amistad.";
+                response.IsSuccess = false;
+                return response;
+            }
+            response.Data = new AddToFriendsResponse
+            {
+                FriendId = request.FriendId,
+                UserId = request.UserId,
+                Status = null
+            };
+
+            UserFriend userFriend = await _userFriendRepository.GetFirstOrDefault(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Sent));
+            await _userFriendRepository.Delete(userFriend);
+
+            await _unitOfWork.Commit();
+
+            response.Message = "Solicitud eliminada.";
+
             return response;
         }
     }

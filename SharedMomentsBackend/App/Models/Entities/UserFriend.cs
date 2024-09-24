@@ -7,5 +7,6 @@
 
         public Guid FriendId { get; set; }
         public User Friend { get; set; }
+        public EFriendRequestStatus Status { get; set; } 
     }
 }
