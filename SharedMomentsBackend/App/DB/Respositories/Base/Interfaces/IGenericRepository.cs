@@ -19,6 +19,7 @@ namespace SharedMomentsBackend.App.DB.Respositories.Base.Interfaces
         Task Add(T entity);
         Task Update(T entity);
         Task Delete(Guid id);
+        Task Delete(T entity);
         Task DeleteRange(IEnumerable<T> data);
         Task<bool> Exists(Expression<Func<T, bool>> expression);
         Task CreateRange(IEnumerable<T> Data);

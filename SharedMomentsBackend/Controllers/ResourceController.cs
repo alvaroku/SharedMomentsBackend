@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Services.Interfaces;
 
@@ -6,6 +7,7 @@ using SharedMomentsBackend.App.Services.Interfaces;
 
 namespace SharedMomentsBackend.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ResourceController : ControllerBase

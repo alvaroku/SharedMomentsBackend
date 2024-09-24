@@ -4,6 +4,7 @@ using AutoMapper;
 using CustomStorageLibrary.App.Interfaces;
  
 using EncryptifyLibrary.App.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
@@ -26,6 +27,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IResourceRepository _resourceRepository;
         IResourceManager _resourceManager;
         IUnitOfWork _unitOfWork;
+        IWebHostEnvironment _hostingEnvironment;
+        IUserFriendRepository _userFriendRepository;
         public UserService(
             IUserRepository userRepository,
             IMapper mapper,
@@ -34,7 +37,9 @@ namespace SharedMomentsBackend.App.Services.Implementations
             IRoleRepository roleRepository,
             IResourceRepository resourceRepository,
             IResourceManager resourceManager,
-            IUnitOfWork unitOfWork
+            IUnitOfWork unitOfWork,
+            IWebHostEnvironment hostingEnvironment,
+            IUserFriendRepository userFriendRepository
             )
         {
             _userRepository = userRepository;
@@ -45,6 +50,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _resourceManager = resourceManager;
             _resourceRepository = resourceRepository;
             _unitOfWork = unitOfWork;
+            _hostingEnvironment = hostingEnvironment;
+            _userFriendRepository = userFriendRepository;
         }
         public async Task<ResultPattern<LoginResponse>> Login(LoginRequest request)
         {
@@ -106,20 +113,39 @@ namespace SharedMomentsBackend.App.Services.Implementations
             });
             return response;
         }
-        public async Task<ResultPattern<IEnumerable<DataDropDown>>> DataDropDownForShareMoment(DefaultFilterParams filterParams, Guid ownerId)
+        public async Task<ResultPattern<IEnumerable<DataDropdownUser>>> DataDropDownFriends(DefaultFilterParams filterParams, Guid currentUserId)
         {
-            ResultPattern<IEnumerable<DataDropDown>> response = new ResultPattern<IEnumerable<DataDropDown>>();
+            ResultPattern<IEnumerable<DataDropdownUser>> response = new ResultPattern<IEnumerable<DataDropdownUser>>();
 
-            IEnumerable<User> users = await _userRepository.GetAll(filter:x=>x.Id!=ownerId);
+            IEnumerable<UserFriend> users = await _userFriendRepository
+                .GetAll(filter: x => x.UserId == currentUserId, null, $"{nameof(UserFriend.Friend)}.{nameof(User.Profile)}");
 
-            response.Data =  users.Select(x => new DataDropDown
+            response.Data =  users.Select(x => new DataDropdownUser
             {
-                Id = x.Id,
-                Label = x.Name
+                Id = x.FriendId,
+                Label = x.Friend.Name,
+                ProfileUrl = x.Friend.Profile?.Url
             });
             return response;
         }
-        
+        public async Task<ResultPattern<IEnumerable<DataDropdownUser>>> DataDropDownNoFriends(DefaultFilterParams filterParams, Guid currentUserId)
+        {
+            ResultPattern<IEnumerable<DataDropdownUser>> response = new ResultPattern<IEnumerable<DataDropdownUser>>();
+
+            IQueryable<User> allUsers = _unitOfWork.Context.Users.AsQueryable().Include(x=>x.Profile).Where(x=>x.Id!=currentUserId);
+
+            IQueryable<Guid> friendIds = _unitOfWork.Context.UserFriends.Where(x => x.UserId == currentUserId).Select(x => x.FriendId);
+
+            IQueryable<User> usersNotInFriends = allUsers.Where(x => !friendIds.Contains(x.Id));
+
+            response.Data = usersNotInFriends.Select(x => new DataDropdownUser
+            {
+                Id = x.Id,
+                Label = x.Name,
+                ProfileUrl = x.Profile != null ? x.Profile.Url : null
+            });
+            return response;
+        }
         public async Task<ResultPattern<ProfileResponse>> GetProfile(Guid userId)
         {
             ResultPattern<ProfileResponse> response = new ResultPattern<ProfileResponse>();
@@ -163,7 +189,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 };
                 CustomStorageLibrary.App.Models.Resource newResourceUploaded = await _resourceManager.UploadFile(
                     newResourceRequest.Stream,
-                    "users",
+                    $"{_hostingEnvironment.EnvironmentName}/users",
                     newResourceRequest.ContentType,
                     user.Id.ToString(),
                     newResourceRequest.Extension
@@ -192,6 +218,81 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             response.Data = profile;
             response.Message = "Perfil actualizado correctamente.";
+            return response;
+        }
+
+        public async Task<ResultPattern<AddToFriendsResponse>> AddToFriends(AddToFriendsRequest request)
+        {
+            ResultPattern<AddToFriendsResponse> response = new ResultPattern<AddToFriendsResponse>();
+            
+            bool userExist = await _userRepository.Exists(x => x.Id == request.FriendId);
+            if (!userExist)
+            {
+                response.StatusCode = 404;
+                response.Message = "Usuario no encontrado.";
+                response.IsSuccess = false;
+                return response;
+            }
+
+            bool isFriend = await _userFriendRepository.Exists(x => x.UserId == request.UserId && x.FriendId == request.FriendId);
+            if (isFriend)
+            {
+                response.StatusCode = 409;
+                response.Message = "El usuario ya es tu amigo.";
+                response.IsSuccess = false;
+                return response;
+            }
+
+            await _userFriendRepository.Add(new UserFriend
+            {
+                UserId = request.UserId,
+                FriendId = request.FriendId
+            });
+
+            await _unitOfWork.Commit();
+
+            response.Message = "Usuario agregado a tu lista de amigos.";
+            response.Data = new AddToFriendsResponse 
+            {
+                FriendId = request.FriendId,
+                UserId = request.UserId
+            };
+            return response;
+        }
+        public async Task<ResultPattern<AddToFriendsResponse>> DeleteToFriends(AddToFriendsRequest request)
+        {
+            ResultPattern<AddToFriendsResponse> response = new ResultPattern<AddToFriendsResponse>();
+
+            bool userExist = await _userRepository.Exists(x => x.Id == request.FriendId);
+            if (!userExist)
+            {
+                response.StatusCode = 404;
+                response.Message = "Usuario no encontrado.";
+                response.IsSuccess = false;
+                return response;
+            }
+
+            bool isFriend = await _userFriendRepository.Exists(x => x.UserId == request.UserId && x.FriendId == request.FriendId);
+            if (!isFriend)
+            {
+                response.StatusCode = 409;
+                response.Message = "El usuario no pertenece a tu lista de amigos.";
+                response.IsSuccess = false;
+                return response;
+            }
+            response.Data = new AddToFriendsResponse
+            {
+                FriendId = request.FriendId,
+                UserId = request.UserId
+            };
+
+            UserFriend userFriend = await _userFriendRepository.GetFirstOrDefault(x => x.UserId == request.UserId && x.FriendId == request.FriendId);
+            await _userFriendRepository.Delete(userFriend);
+
+            await _unitOfWork.Commit();
+
+            response.Message = "Usuario eliminado de tu lista de amigos.";
+            
             return response;
         }
     }

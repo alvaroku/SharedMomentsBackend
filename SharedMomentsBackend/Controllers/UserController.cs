@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SharedMomentsBackend.App.Models.DTOs;
 using SharedMomentsBackend.App.Models.DTOs.User;
@@ -30,17 +31,30 @@ namespace SharedMomentsBackend.Controllers
             ResultPattern<UserResponse> result = await _userService.Register(request);
             return StatusCode(result.StatusCode, result);
         }
-        [HttpGet("DataDropDownForShareMoment")]
-        public async Task<IActionResult> DataDropDownForShareMoment(int pageNumber, int pageSize, string? search, bool? status)
+
+        [Authorize]
+        [HttpGet("DataDropDownFriends")]
+        public async Task<IActionResult> DataDropDownFriends(int pageNumber, int pageSize, string? search, bool? status)
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid OwnerId = Guid.Parse(userIdClaim.Value);
 
             DefaultFilterParams request = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status };
-            ResultPattern<IEnumerable<DataDropDown>> result = await _userService.DataDropDownForShareMoment(request, OwnerId);
+            ResultPattern<IEnumerable<DataDropdownUser>> result = await _userService.DataDropDownFriends(request, OwnerId);
             return StatusCode(result.StatusCode, result);
         }
+        [Authorize]
+        [HttpGet("DataDropDownNoFriends")]
+        public async Task<IActionResult> DataDropDownNoFriends(int pageNumber, int pageSize, string? search, bool? status)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid OwnerId = Guid.Parse(userIdClaim.Value);
 
+            DefaultFilterParams request = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status };
+            ResultPattern<IEnumerable<DataDropdownUser>> result = await _userService.DataDropDownNoFriends(request, OwnerId);
+            return StatusCode(result.StatusCode, result);
+        }
+        [Authorize]
         [HttpGet("Profile")]
         public async Task<IActionResult> GetProfile()
         {
@@ -50,13 +64,37 @@ namespace SharedMomentsBackend.Controllers
             ResultPattern<ProfileResponse> result = await _userService.GetProfile(OwnerId);
             return StatusCode(result.StatusCode, result);
         }
-
+        [Authorize]
         [HttpPut("Profile")]
         public async Task<IActionResult> UpdateProfile([FromForm] ProfileRequest profile)
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid OwnerId = Guid.Parse(userIdClaim.Value);
             ResultPattern<ProfileResponse> result = await _userService.UpdateProfile(OwnerId,profile);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [Authorize]
+        [HttpPost("AddToFriends")]
+        public async Task<IActionResult> AddToFriends(AddToFriendsRequest request)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid OwnerId = Guid.Parse(userIdClaim.Value);
+            request.UserId = OwnerId;
+            ResultPattern<AddToFriendsResponse> result = await _userService.AddToFriends(request);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [Authorize]
+        [HttpDelete("DeleteToFriends/{friendId}")]
+        public async Task<IActionResult> DeleteToFriends(Guid friendId)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid OwnerId = Guid.Parse(userIdClaim.Value);
+
+            AddToFriendsRequest request = new AddToFriendsRequest { UserId = OwnerId, FriendId = friendId };
+
+            ResultPattern<AddToFriendsResponse> result = await _userService.DeleteToFriends(request);
             return StatusCode(result.StatusCode, result);
         }
     }

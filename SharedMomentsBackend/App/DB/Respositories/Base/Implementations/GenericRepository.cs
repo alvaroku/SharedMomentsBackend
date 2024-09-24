@@ -110,7 +110,11 @@ namespace SharedMomentsBackend.App.DB.Respositories.Base.Implementations
             _unitOfWork.Context.Set<T>().Remove(entity);
             await _unitOfWork.Commit();
         }
-
+        public async Task Delete(T entity)
+        {
+            _unitOfWork.Context.Set<T>().Remove(entity);
+            await _unitOfWork.Commit();
+        }
         public async Task DeleteRange(IEnumerable<T> data)
         {
             _unitOfWork.Context.Set<T>().RemoveRange(data);

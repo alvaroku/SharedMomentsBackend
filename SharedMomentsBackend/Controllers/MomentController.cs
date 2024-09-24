@@ -50,7 +50,7 @@ namespace SharedMomentsBackend.Controllers
             return StatusCode(result.StatusCode, result);
         }
         [HttpGet("GetSharedWithMe")]
-        public async Task<IActionResult> GetSharedWithMe(int pageNumber, int pageSize, string? search, bool? status, bool? hasAlbum, Guid? albumId)
+        public async Task<IActionResult> GetSharedWithMe(int pageNumber, int pageSize, string? search, bool? status)
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid userId = Guid.Parse(userIdClaim.Value);
@@ -61,8 +61,6 @@ namespace SharedMomentsBackend.Controllers
                 PageSize = pageSize, 
                 Search = search, 
                 Status = status,
-                HasAlbum = hasAlbum,
-                AlbumId = albumId
             };
             ResultPattern<PaginateResponse<MomentResponse>>
                 result = await _momentService.GetSharedWithMe(filters);

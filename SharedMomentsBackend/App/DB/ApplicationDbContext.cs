@@ -21,6 +21,8 @@ namespace SharedMomentsBackend.App.DB
         public DbSet<User> Users { get; set; }
         public DbSet<MomentUser> MomentUsers { get; set; }
 
+        public DbSet<UserFriend> UserFriends { get; set; }
+
         public DbSet<Role> Roles { get; set; }
         public DbSet<Models.Entities.Security.Action> Actions { get; set; }
         public DbSet<Module> Modules { get; set; }
@@ -30,6 +32,20 @@ namespace SharedMomentsBackend.App.DB
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<UserFriend>()
+                .HasKey(uf => new { uf.UserId, uf.FriendId }); // Clave compuesta
+
+            modelBuilder.Entity<UserFriend>()
+                .HasOne(uf => uf.User)
+                .WithMany(u => u.UserFriends)
+                .HasForeignKey(uf => uf.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Evitar eliminación en cascada
+
+            modelBuilder.Entity<UserFriend>()
+                .HasOne(uf => uf.Friend)
+                .WithMany()
+                .HasForeignKey(uf => uf.FriendId)
+                .OnDelete(DeleteBehavior.Restrict);
             base.OnModelCreating(modelBuilder);
 
             // Definir IDs únicos para roles y usuario

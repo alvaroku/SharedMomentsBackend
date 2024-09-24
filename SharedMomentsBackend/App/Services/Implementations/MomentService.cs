@@ -22,6 +22,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IUserRepository _userRepository;
         IUnitOfWork _unitOfWork;
         IAlbumRepository _albumRepository;
+        IWebHostEnvironment _hostingEnvironment;
         public MomentService(
             IMapper mapper,
             IResourceManager resourceManager,
@@ -31,7 +32,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             IMomentUserRepository momentUserRepository,
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
-            IAlbumRepository albumRepository)
+            IAlbumRepository albumRepository,
+            IWebHostEnvironment hostingEnvironment)
         {
 
             _mapper = mapper;
@@ -43,6 +45,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _albumRepository = albumRepository;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterMomentParams filterParams)
@@ -53,7 +56,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             PaginateResponse<Moment> resultData = await _momentRepository
                 .GetMoments(filterParams, $"{nameof(Moment.MomentResources)}.{nameof(Resource)}," +
-                                          $"{nameof(Moment.MomentUsers)}.{nameof(User)}");
+                                          $"{nameof(Moment.MomentUsers)}.{nameof(User)}," +
+                                          $"{nameof(Moment.Owner)}");
             
             paginateResult.List = resultData.List.Select(x => new MomentResponse
             {
@@ -63,6 +67,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Date = x.Date,
                 Place = x.Place,
                 OwnerId = x.OwnerId,
+                OwnerName = x.Owner.Name,
                 AlbumId = x.AlbumId,
                 Resources = x.MomentResources.Select(x => new ResourceResponse
                 {
@@ -148,7 +153,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 {
                     string srcName = count == 0 ? $"{request.Title.Replace(" ", "")}" : $"{request.Title.Replace(" ", "")}_{count}";
                     CustomStorageLibrary.App.Models.Resource resource = await _resourceManager.UploadFile(
-                    res.Stream, "moments", res.ContentType, srcName, res.Extension);
+                    res.Stream, $"{_hostingEnvironment.EnvironmentName}/moments", res.ContentType, srcName, res.Extension);
                     Resource newResource = new Resource
                     {
                         Name = resource.Name,
@@ -242,7 +247,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 {
                     string srcName = count == 0 ? $"{request.Title.Replace(" ", "")}" : $"{request.Title.Replace(" ", "")}_{count}";
                     CustomStorageLibrary.App.Models.Resource resource = await _resourceManager.UploadFile(
-                    res.Stream, "moments", res.ContentType, srcName, res.Extension);
+                    res.Stream, $"{_hostingEnvironment.EnvironmentName}/moments", res.ContentType, srcName, res.Extension);
 
                     Resource newResource = new Resource
                     {

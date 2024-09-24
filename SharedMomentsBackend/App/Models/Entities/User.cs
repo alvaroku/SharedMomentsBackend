@@ -15,5 +15,6 @@ namespace SharedMomentsBackend.App.Models.Entities
         public Role Role { get; set; }
         public ICollection<AlbumUser> AlbumUsers { get; set; }
         public ICollection<MomentUser> MomentUsers { get; set; }
+        public ICollection<UserFriend> UserFriends { get; set; }
     }
 }
