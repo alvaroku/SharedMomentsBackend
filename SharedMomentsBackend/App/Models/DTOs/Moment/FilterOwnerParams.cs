@@ -2,7 +2,7 @@
 {
     public class FilterOwnerParams : DefaultFilterParams
     {
-        public Guid OwnerId { get; set; }
+        public Guid? OwnerId { get; set; }
     }
     public class FilterMomentParams : FilterOwnerParams
     {

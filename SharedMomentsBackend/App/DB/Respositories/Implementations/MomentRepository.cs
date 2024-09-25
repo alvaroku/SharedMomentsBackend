@@ -21,7 +21,7 @@ namespace SharedMomentsBackend.App.DB.Respositories.Implementations
         }
         private Expression<Func<Moment, bool>> GetExpression(FilterMomentParams defaultFilter)
         {
-            Expression<Func<Moment, bool>> filter = x => x.OwnerId.Equals(defaultFilter.OwnerId);
+            Expression<Func<Moment, bool>> filter = x =>defaultFilter.OwnerId.HasValue? x.OwnerId.Equals(defaultFilter.OwnerId.Value):true;
 
             if (!string.IsNullOrWhiteSpace(defaultFilter.Search))
             {

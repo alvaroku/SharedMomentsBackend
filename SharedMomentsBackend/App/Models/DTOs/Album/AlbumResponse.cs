@@ -7,6 +7,7 @@
         public string Description { get; set; }
         public Guid OwnerId { get; set; }
         public string OwnerName { get; set; }
+        public string? ProfileUrl { get; set; }
         public IEnumerable<AlbumUserResponse> SharedWith { get; set; } = Enumerable.Empty<AlbumUserResponse>();
     }
 }

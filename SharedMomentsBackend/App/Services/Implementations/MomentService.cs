@@ -56,8 +56,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             PaginateResponse<Moment> resultData = await _momentRepository
                 .GetMoments(filterParams, $"{nameof(Moment.MomentResources)}.{nameof(Resource)}," +
-                                          $"{nameof(Moment.MomentUsers)}.{nameof(User)}," +
-                                          $"{nameof(Moment.Owner)}");
+                                          $"{nameof(Moment.MomentUsers)}.{nameof(User)}.{nameof(User.Profile)}," +
+                                          $"{nameof(Moment.Owner)}.{nameof(User.Profile)}");
             
             paginateResult.List = resultData.List.Select(x => new MomentResponse
             {
@@ -68,6 +68,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Place = x.Place,
                 OwnerId = x.OwnerId,
                 OwnerName = x.Owner.Name,
+                ProfileUrl = x.Owner.Profile?.Url,
                 AlbumId = x.AlbumId,
                 Resources = x.MomentResources.Select(x => new ResourceResponse
                 {
@@ -78,7 +79,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 SharedWith = x.MomentUsers.Select(x => new MomentUserResponse
                 {
                     UserId = x.UserId,
-                    UserName = x.User.Name
+                    UserName = x.User.Name,
+                    ProfileUrl = x.User.Profile?.Url
                 })
             });
 
@@ -99,7 +101,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             PaginateResponse<MomentUser> resultData = await _momentUserRepository
                 .GetSharedWithMe(filterParams, $"{nameof(MomentUser.Moment)}.{nameof(Moment.MomentResources)}.{nameof(MomentResource.Resource)}," +
-                $"{nameof(MomentUser.Moment)}.{nameof(Moment.Owner)}");
+                $"{nameof(MomentUser.Moment)}.{nameof(Moment.Owner)}.{nameof(User.Profile)}");
 
             paginateResult.List = resultData.List.Select(x=>x.Moment).Select(x => new MomentResponse
             {
@@ -110,17 +112,13 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Place = x.Place,
                 OwnerId = x.OwnerId,
                 OwnerName = x.Owner.Name,
+                ProfileUrl = x.Owner.Profile?.Url,
                 Resources = x.MomentResources.Select(x => new ResourceResponse
                 {
                     Id = x.Resource.Id,
                     Url = x.Resource.Url,
                     Extension = x.Resource.Extension
                 }),
-                //SharedWith = x.MomentUsers.Select(x => new MomentUserResponse
-                //{
-                //    UserId = x.UserId,
-                //    UserName = x.User.Name
-                //})
             });
 
             paginateResult.PageNumber = resultData.PageNumber;
@@ -315,7 +313,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             foreach (Resource r in res)
             {
-                await _resourceManager.DeleteFile("moments", r.Name, r.Extension);
+                await _resourceManager.DeleteFile($"{_hostingEnvironment.EnvironmentName}/moments", r.Name, r.Extension);
             }
 
             await _resourceRepository.DeleteRange(res);

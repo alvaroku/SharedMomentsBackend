@@ -185,20 +185,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Roles",
-                columns: new[] { "Id", "CreatedAt", "IsActive", "Name", "UpdatedAt" },
-                values: new object[,]
-                {
-                    { new Guid("e9a54e41-3d9a-4a93-abb5-a3652846edc2"), new DateTime(2024, 8, 9, 2, 10, 45, 235, DateTimeKind.Utc).AddTicks(122), true, "User", new DateTime(2024, 8, 9, 2, 10, 45, 235, DateTimeKind.Utc).AddTicks(122) },
-                    { new Guid("fabfb63b-9ea6-44aa-85ea-4fe0de75b134"), new DateTime(2024, 8, 9, 2, 10, 45, 235, DateTimeKind.Utc).AddTicks(113), true, "Admin", new DateTime(2024, 8, 9, 2, 10, 45, 235, DateTimeKind.Utc).AddTicks(119) }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Id", "CreatedAt", "DateOfBirth", "Email", "IsActive", "Name", "PasswordHash", "PhoneNumber", "ProfileId", "RoleId", "UpdatedAt" },
-                values: new object[] { new Guid("27a4b889-3192-4f14-86ca-eebd3e9561b6"), new DateTime(2024, 8, 9, 2, 10, 45, 235, DateTimeKind.Utc).AddTicks(305), new DateTime(2000, 5, 23, 0, 0, 0, 0, DateTimeKind.Unspecified), "alvaroku123@gmail.com", true, "Alvaro Kú", "hashed_password", "9919596720", null, new Guid("fabfb63b-9ea6-44aa-85ea-4fe0de75b134"), new DateTime(2024, 8, 9, 2, 10, 45, 235, DateTimeKind.Utc).AddTicks(306) });
-
             migrationBuilder.CreateIndex(
                 name: "IX_Albums_OwnerId",
                 table: "Albums",

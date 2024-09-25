@@ -2,7 +2,8 @@
 using AuthManagerLibrary.App.Models;
 using AutoMapper;
 using CustomStorageLibrary.App.Interfaces;
- 
+using EmailSenderLibrary.App.Interfaces;
+using EmailSenderLibrary.App.Models;
 using EncryptifyLibrary.App.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
@@ -32,6 +33,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IUnitOfWork _unitOfWork;
         IWebHostEnvironment _hostingEnvironment;
         IUserFriendRepository _userFriendRepository;
+        IEmailSender _emailSender;
+        IConfiguration _configuration;
         public UserService(
             IUserRepository userRepository,
             IMapper mapper,
@@ -42,7 +45,9 @@ namespace SharedMomentsBackend.App.Services.Implementations
             IResourceManager resourceManager,
             IUnitOfWork unitOfWork,
             IWebHostEnvironment hostingEnvironment,
-            IUserFriendRepository userFriendRepository
+            IUserFriendRepository userFriendRepository,
+            IEmailSender emailSender,
+            IConfiguration configuration
             )
         {
             _userRepository = userRepository;
@@ -55,6 +60,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _unitOfWork = unitOfWork;
             _hostingEnvironment = hostingEnvironment;
             _userFriendRepository = userFriendRepository;
+            _emailSender = emailSender;
+            _configuration = configuration;
         }
         public async Task<ResultPattern<LoginResponse>> Login(LoginRequest request)
         {
@@ -194,12 +201,27 @@ namespace SharedMomentsBackend.App.Services.Implementations
             }
 
             User user = await _userRepository.GetFirstOrDefault(x => x.Id == userId, $"{nameof(User.Profile)}");
-
+            bool existUser = await _userRepository.Exists(x => x.Id != userId && x.Email == request.Email);
+            if (existUser)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = 409;
+                response.Message = "El correo ingresado ya está en uso.";
+                return response;
+            }
+            existUser = await _userRepository.Exists(x => x.Id != userId && x.PhoneNumber == request.PhoneNumber);
+            if (existUser)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = 409;
+                response.Message = "El teléfono ingresado ya está en uso.";
+                return response;
+            }
             if (request.Profile is not null)
             {
                if(user.Profile is not null)
                 {
-                    await _resourceManager.DeleteFile("users", user.Profile.Name, user.Profile.Extension);
+                    await _resourceManager.DeleteFile($"{_hostingEnvironment.EnvironmentName}/users", user.Profile.Name, user.Profile.Extension);
                     await _resourceRepository.Delete(user.Profile.Id);
                 }
 
@@ -284,14 +306,26 @@ namespace SharedMomentsBackend.App.Services.Implementations
             });
 
             await _unitOfWork.Commit();
+           
+            User friend = await _userRepository.GetFirstOrDefault(x => x.Id == request.FriendId);
+            User user = await _userRepository.GetFirstOrDefault(x => x.Id == request.UserId);
+            string header = "Solicitud de amistad";
+            string dynamicContent = Constants.templateFriendRequest(friend.Name,user.Name,_configuration.GetValue<string>("frontUrl"));
+            string htmlBody = string.Format(Constants.htmlTemplate, header, dynamicContent);
+            EmailDataRequest emailDataRequest = new EmailDataRequest
+            {
+                Subject = header,
+                Body = htmlBody,
+                EmailTo = friend.Email
+            };
+            await _emailSender.SendEmail(emailDataRequest);
 
             response.Message = "Solicitud de amistad enviada.";
             response.Data = new AddToFriendsResponse 
             {
                 FriendId = request.FriendId,
                 UserId = request.UserId,
-                Status = EFriendRequestStatus.Sent,
-                
+                Status = EFriendRequestStatus.Sent,  
             };
             return response;
         }
@@ -318,18 +352,31 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 return response;
             }
          
-            UserFriend userFriend = await _userFriendRepository.GetFirstOrDefault(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Sent));
+            UserFriend userFriend = await _userFriendRepository
+                .GetFirstOrDefault(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Sent),
+                includeProperties:$"{nameof(UserFriend.Friend)},{nameof(UserFriend.User)}");
             userFriend.Status = EFriendRequestStatus.Accepted;
+          
+            await _unitOfWork.Commit();
+
+            string header = "Solicitud de amistad aceptada";
+            string dynamicContent = Constants.templateAcceptedFriendRequest(userFriend.User.Name,userFriend.Friend.Name , _configuration.GetValue<string>("frontUrl"));
+            string htmlBody = string.Format(Constants.htmlTemplate, header, dynamicContent);
+            EmailDataRequest emailDataRequest = new EmailDataRequest
+            {
+                Subject = header,
+                Body = htmlBody,
+                EmailTo = userFriend.User.Email
+            };
+            await _emailSender.SendEmail(emailDataRequest);
+
+            response.Message = "Solicitud aceptada.";
             response.Data = new AddToFriendsResponse
             {
                 FriendId = userFriend.FriendId,
                 UserId = userFriend.UserId,
                 Status = userFriend.Status
             };
-
-            await _unitOfWork.Commit();
-
-            response.Message = "Solicitud aceptada.";
 
             return response;
         }

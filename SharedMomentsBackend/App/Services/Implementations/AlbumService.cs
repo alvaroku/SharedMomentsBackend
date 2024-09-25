@@ -38,7 +38,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             PaginateResponse<AlbumResponse> paginateResult = new PaginateResponse<AlbumResponse>();
 
             PaginateResponse<Album> resultData = await _albumRepository
-                .GetAlbums(filterParams, $"{nameof(Album.AlbumUsers)}.{nameof(User)}");
+                .GetAlbums(filterParams, $"{nameof(Album.AlbumUsers)}.{nameof(User)}.{nameof(User.Profile)}," +
+                $"{nameof(Album.Owner)}.{nameof(User.Profile)}");
 
             paginateResult.List = resultData.List.Select(x => new AlbumResponse
             {
@@ -46,10 +47,13 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Name = x.Name,
                 Description = x.Description,
                 OwnerId = x.OwnerId,
+                OwnerName = x.Owner.Name,
+                ProfileUrl = x.Owner.Profile?.Url,
                 SharedWith = x.AlbumUsers.Select(x => new AlbumUserResponse
                 {
                     UserId = x.UserId,
-                    UserName = x.User.Name
+                    UserName = x.User.Name,
+                    ProfileUrl = x.User.Profile?.Url
                 })
             });
 
@@ -69,7 +73,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             PaginateResponse<AlbumResponse> paginateResult = new PaginateResponse<AlbumResponse>();
 
             PaginateResponse<AlbumUser> resultData = await _albumUserRepository
-                .GetSharedWithMe(filterParams, $"{nameof(AlbumUser.Album)}.{nameof(Album.Owner)}");
+                .GetSharedWithMe(filterParams, $"{nameof(AlbumUser.Album)}.{nameof(Album.Owner)}.{nameof(User.Profile)}");
 
             paginateResult.List = resultData.List.Select(x => x.Album).Select(x => new AlbumResponse
             {
@@ -77,12 +81,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 Name = x.Name,
                 Description = x.Description,
                 OwnerId = x.OwnerId,
-                OwnerName = x.Owner.Name
-                //SharedWith = x.MomentUsers.Select(x => new MomentUserResponse
-                //{
-                //    UserId = x.UserId,
-                //    UserName = x.User.Name
-                //})
+                OwnerName = x.Owner.Name,
+                ProfileUrl = x.Owner.Profile?.Url
             });
 
             paginateResult.PageNumber = resultData.PageNumber;

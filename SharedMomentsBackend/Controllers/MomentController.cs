@@ -36,14 +36,22 @@ namespace SharedMomentsBackend.Controllers
                 HasAlbum = hasAlbum,
                 AlbumId = albumId
             };
-            if (!ownerId.HasValue)
+            if (!albumId.HasValue)
             {
-                Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                Guid userId = Guid.Parse(userIdClaim.Value);
-                filters.OwnerId = userId;
-            }else
+                if (!ownerId.HasValue)
+                {
+                    Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                    Guid userId = Guid.Parse(userIdClaim.Value);
+                    filters.OwnerId = userId;
+                }
+                else
+                {
+                    filters.OwnerId = ownerId.Value;
+                }
+            }
+            else
             {
-                filters.OwnerId = ownerId.Value;
+                filters.OwnerId = null;
             }
             ResultPattern<PaginateResponse<MomentResponse>>
                 result = await _momentService.GetMoments(filters);

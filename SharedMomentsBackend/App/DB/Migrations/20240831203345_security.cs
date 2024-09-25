@@ -13,20 +13,7 @@ namespace SharedMomentsBackend.App.DB.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DeleteData(
-                table: "Roles",
-                keyColumn: "Id",
-                keyValue: new Guid("0cd538a8-7b59-4997-a0f7-1209a5419f29"));
-
-            migrationBuilder.DeleteData(
-                table: "Users",
-                keyColumn: "Id",
-                keyValue: new Guid("3b52e1b1-af54-4ba7-b570-a541e0190331"));
-
-            migrationBuilder.DeleteData(
-                table: "Roles",
-                keyColumn: "Id",
-                keyValue: new Guid("2c7046ed-154d-4465-b5ba-a2bb1b9f7ec5"));
+            
 
             migrationBuilder.CreateTable(
                 name: "Actions",
@@ -135,20 +122,7 @@ namespace SharedMomentsBackend.App.DB.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Roles",
-                columns: new[] { "Id", "CreatedAt", "IsActive", "Name", "UpdatedAt" },
-                values: new object[,]
-                {
-                    { new Guid("c176c03f-b269-459c-9d48-5c8a27dc9b2b"), new DateTime(2024, 8, 31, 20, 33, 45, 54, DateTimeKind.Utc).AddTicks(1549), true, "User", new DateTime(2024, 8, 31, 20, 33, 45, 54, DateTimeKind.Utc).AddTicks(1549) },
-                    { new Guid("ee363e14-80a8-40ae-b662-b24b8e22472a"), new DateTime(2024, 8, 31, 20, 33, 45, 54, DateTimeKind.Utc).AddTicks(1546), true, "Admin", new DateTime(2024, 8, 31, 20, 33, 45, 54, DateTimeKind.Utc).AddTicks(1547) }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Id", "CreatedAt", "DateOfBirth", "Email", "IsActive", "Name", "PasswordHash", "PhoneNumber", "ProfileId", "RoleId", "UpdatedAt" },
-                values: new object[] { new Guid("af6e602e-eed1-4c05-a1ee-31280ba1fb49"), new DateTime(2024, 8, 31, 20, 33, 45, 54, DateTimeKind.Utc).AddTicks(1687), new DateTime(2000, 5, 23, 0, 0, 0, 0, DateTimeKind.Unspecified), "alvaroku123@gmail.com", true, "Alvaro Kú", "b2867617492e26c338ab49f72afabc984d798b59755a27e312b953716ae964d7", "9919596720", null, new Guid("ee363e14-80a8-40ae-b662-b24b8e22472a"), new DateTime(2024, 8, 31, 20, 33, 45, 54, DateTimeKind.Utc).AddTicks(1687) });
-
+            
             migrationBuilder.CreateIndex(
                 name: "IX_ModuleActions_ActionId",
                 table: "ModuleActions",
@@ -193,34 +167,7 @@ namespace SharedMomentsBackend.App.DB.Migrations
             migrationBuilder.DropTable(
                 name: "Modules");
 
-            migrationBuilder.DeleteData(
-                table: "Roles",
-                keyColumn: "Id",
-                keyValue: new Guid("c176c03f-b269-459c-9d48-5c8a27dc9b2b"));
-
-            migrationBuilder.DeleteData(
-                table: "Users",
-                keyColumn: "Id",
-                keyValue: new Guid("af6e602e-eed1-4c05-a1ee-31280ba1fb49"));
-
-            migrationBuilder.DeleteData(
-                table: "Roles",
-                keyColumn: "Id",
-                keyValue: new Guid("ee363e14-80a8-40ae-b662-b24b8e22472a"));
-
-            migrationBuilder.InsertData(
-                table: "Roles",
-                columns: new[] { "Id", "CreatedAt", "IsActive", "Name", "UpdatedAt" },
-                values: new object[,]
-                {
-                    { new Guid("0cd538a8-7b59-4997-a0f7-1209a5419f29"), new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(564), true, "User", new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(564) },
-                    { new Guid("2c7046ed-154d-4465-b5ba-a2bb1b9f7ec5"), new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(557), true, "Admin", new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(561) }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Id", "CreatedAt", "DateOfBirth", "Email", "IsActive", "Name", "PasswordHash", "PhoneNumber", "ProfileId", "RoleId", "UpdatedAt" },
-                values: new object[] { new Guid("3b52e1b1-af54-4ba7-b570-a541e0190331"), new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(698), new DateTime(2000, 5, 23, 0, 0, 0, 0, DateTimeKind.Unspecified), "alvaroku123@gmail.com", true, "Alvaro Kú", "b2867617492e26c338ab49f72afabc984d798b59755a27e312b953716ae964d7", "9919596720", null, new Guid("2c7046ed-154d-4465-b5ba-a2bb1b9f7ec5"), new DateTime(2024, 8, 13, 19, 18, 29, 661, DateTimeKind.Utc).AddTicks(699) });
+          
         }
     }
 }
