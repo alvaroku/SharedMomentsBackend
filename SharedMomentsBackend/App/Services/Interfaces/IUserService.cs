@@ -7,8 +7,9 @@ namespace SharedMomentsBackend.App.Services.Interfaces
     {
         Task<ResultPattern<LoginResponse>> Login(LoginRequest request);
         Task<ResultPattern<UserResponse>> Register(UserRequest request);
-        Task<ResultPattern<IEnumerable<UserFriendRequest>>> DataDropDownFriends(DefaultFilterParams filterParams,Guid currentUserId);
-        Task<ResultPattern<List<UserFriendRequest>>> DataDropDownNoFriends(DefaultFilterParams filterParams, Guid currentUserId);
+        Task<ResultPattern<IEnumerable<UserFriendRequest>>> GetFriendList(DefaultFilterParams filterParams,Guid currentUserId);
+        Task<ResultPattern<List<UserFriendRequest>>> GetNoFriendList(DefaultFilterParams filterParams, Guid currentUserId);
+        Task<ResultPattern<List<DataDropdownUser>>> GetFriendListDropDown(DefaultFilterParams filterParams, Guid currentUserId);
         Task<ResultPattern<ProfileResponse>> GetProfile(Guid userId);
         Task<ResultPattern<ProfileResponse>> UpdateProfile(Guid userId, ProfileRequest request);
         Task<ResultPattern<AddToFriendsResponse>> SendFriendRequest(AddToFriendsRequest request);

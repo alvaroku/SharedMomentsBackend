@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using EmailSenderLibrary.App.Interfaces;
+using EmailSenderLibrary.App.Models;
 using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models.DTOs;
@@ -16,12 +18,16 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IAlbumUserRepository _albumUserRepository;
         IUserRepository _userRepository;
         IUnitOfWork _unitOfWork;
+        IEmailSender _emailSender;
+        IConfiguration _configuration;
         public AlbumService(
             IMapper mapper,
             IAlbumRepository albumRepository,
             IAlbumUserRepository albumUserRepository,
             IUserRepository userRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IEmailSender emailSender,
+            IConfiguration configuration)
         {
 
             _mapper = mapper;
@@ -29,6 +35,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _albumUserRepository = albumUserRepository;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _emailSender = emailSender;
+            _configuration = configuration;
         }
 
         public async Task<ResultPattern<PaginateResponse<AlbumResponse>>> GetAlbums(FilterOwnerParams filterParams)
@@ -247,7 +255,25 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             await _unitOfWork.Commit();
 
-            moment = await _albumRepository.GetById(id, $"{nameof(Album.AlbumUsers)}.{nameof(User)}");
+            moment = await _albumRepository.GetById(id, $"{nameof(Album.Owner)},{nameof(Album.AlbumUsers)}.{nameof(User)}");
+
+            string sharedBy = moment.Owner.Name;
+            string title = moment.Name;
+            moment.AlbumUsers.Where(x => request.SharedUsersId.Contains(x.UserId)).ToList().ForEach(async x =>
+            {
+
+                string header = "Albúm compartido";
+                string dynamicContent = Constants.templateShareAlbum(x.User.Name, sharedBy, title, _configuration.GetValue<string>("frontUrl"));
+                string htmlBody = string.Format(Constants.htmlTemplate, header, dynamicContent);
+                EmailDataRequest emailDataRequest = new EmailDataRequest
+                {
+                    Subject = header,
+                    Body = htmlBody,
+                    EmailTo = x.User.Email
+                };
+                await _emailSender.SendEmail(emailDataRequest);
+            });
+
             response.Data = moment.AlbumUsers.Where(x => request.SharedUsersId.Contains(x.UserId)).Select(x => new ShareAlbumResponse
             {
                 UserId = x.UserId,

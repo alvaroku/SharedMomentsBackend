@@ -13,12 +13,14 @@ namespace SharedMomentsBackend.App.Services.Implementations
         private readonly IMapper _mapper;
         IResourceManager _resourceManager;
         IResourceRepository _resourceRepository;
-        public ResourceService(IMapper mapper, IResourceManager resourceManager, IResourceRepository resourceRepository)
+        IWebHostEnvironment _hostEnvironment;
+        public ResourceService(IMapper mapper, IResourceManager resourceManager, IResourceRepository resourceRepository,IWebHostEnvironment webHostEnvironment)
         {
 
             _mapper = mapper;
             _resourceManager = resourceManager;
             _resourceRepository = resourceRepository;
+            _hostEnvironment = webHostEnvironment;
         }
         public async Task<ResultPattern<bool>> DeleteResource(Guid id)
         {
@@ -34,7 +36,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             string path = resource.MomentResources.Any() ? "moments" : "users";
 
-            await _resourceManager.DeleteFile(path, resource.Name, resource.Extension);
+            await _resourceManager.DeleteFile($"{_hostEnvironment.EnvironmentName}/{path}", resource.Name, resource.Extension);
 
             await _resourceRepository.Delete(resource.Id);
 

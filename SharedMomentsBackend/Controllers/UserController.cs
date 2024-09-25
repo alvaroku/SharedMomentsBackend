@@ -33,25 +33,37 @@ namespace SharedMomentsBackend.Controllers
         }
 
         [Authorize]
-        [HttpGet("DataDropDownFriends")]
-        public async Task<IActionResult> DataDropDownFriends(int pageNumber, int pageSize, string? search, bool? status)
+        [HttpGet("GetFriendList")]
+        public async Task<IActionResult> GetFriendList(int pageNumber, int pageSize, string? search, bool? status)
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid OwnerId = Guid.Parse(userIdClaim.Value);
 
             DefaultFilterParams request = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status };
-            ResultPattern<IEnumerable<UserFriendRequest>> result = await _userService.DataDropDownFriends(request, OwnerId);
+            ResultPattern<IEnumerable<UserFriendRequest>> result = await _userService.GetFriendList(request, OwnerId);
             return StatusCode(result.StatusCode, result);
         }
         [Authorize]
-        [HttpGet("DataDropDownNoFriends")]
-        public async Task<IActionResult> DataDropDownNoFriends(int pageNumber, int pageSize, string? search, bool? status)
+        [HttpGet("GetNoFriendList")]
+        public async Task<IActionResult> GetNoFriendList(int pageNumber, int pageSize, string? search, bool? status)
         {
             Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             Guid OwnerId = Guid.Parse(userIdClaim.Value);
 
             DefaultFilterParams request = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status };
-            ResultPattern<List<UserFriendRequest>> result = await _userService.DataDropDownNoFriends(request, OwnerId);
+            ResultPattern<List<UserFriendRequest>> result = await _userService.GetNoFriendList(request, OwnerId);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [Authorize]
+        [HttpGet("GetFriendListDropDown")]
+        public async Task<IActionResult> GetFriendListDropDown(int pageNumber, int pageSize, string? search, bool? status)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid OwnerId = Guid.Parse(userIdClaim.Value);
+
+            DefaultFilterParams request = new DefaultFilterParams { PageNumber = pageNumber, PageSize = pageSize, Search = search, Status = status };
+            ResultPattern<List<DataDropdownUser>> result = await _userService.GetFriendListDropDown(request, OwnerId);
             return StatusCode(result.StatusCode, result);
         }
         [Authorize]
@@ -98,7 +110,6 @@ namespace SharedMomentsBackend.Controllers
         public async Task<IActionResult> DeleteFromFriends(Guid ownerId, Guid friendId)
         {
             AddToFriendsRequest request = new AddToFriendsRequest { UserId = ownerId, FriendId = friendId };
-
             ResultPattern<AddToFriendsResponse> result = await _userService.DeleteFromFriends(request);
             return StatusCode(result.StatusCode, result);
         }

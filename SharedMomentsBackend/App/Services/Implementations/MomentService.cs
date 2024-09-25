@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using CustomStorageLibrary.App.Interfaces;
+using EmailSenderLibrary.App.Interfaces;
+using EmailSenderLibrary.App.Models;
 using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Implementations;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
@@ -23,6 +25,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
         IUnitOfWork _unitOfWork;
         IAlbumRepository _albumRepository;
         IWebHostEnvironment _hostingEnvironment;
+        IEmailSender _emailSender;
+        IConfiguration _configuration;
         public MomentService(
             IMapper mapper,
             IResourceManager resourceManager,
@@ -33,7 +37,9 @@ namespace SharedMomentsBackend.App.Services.Implementations
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
             IAlbumRepository albumRepository,
-            IWebHostEnvironment hostingEnvironment)
+            IWebHostEnvironment hostingEnvironment,
+            IEmailSender emailSender,
+            IConfiguration configuration)
         {
 
             _mapper = mapper;
@@ -46,6 +52,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             _unitOfWork = unitOfWork;
             _albumRepository = albumRepository;
             _hostingEnvironment = hostingEnvironment;
+            _emailSender = emailSender;
+            _configuration = configuration;
         }
 
         public async Task<ResultPattern<PaginateResponse<MomentResponse>>> GetMoments(FilterMomentParams filterParams)
@@ -365,13 +373,31 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             await _unitOfWork.Commit();
 
-            moment = await _momentRepository.GetById(id, $"{nameof(Moment.MomentUsers)}.{nameof(User)}");
+            moment = await _momentRepository.GetById(id, $"{nameof(Moment.Owner)},{nameof(Moment.MomentUsers)}.{nameof(User)}");
+            
+            string sharedBy = moment.Owner.Name;
+            string title = moment.Title;
+            moment.MomentUsers.Where(x => request.SharedUsersId.Contains(x.UserId)).ToList().ForEach(async x =>
+            {
+                
+                string header = "Momento compartido";
+                string dynamicContent = Constants.templateShareMoment(x.User.Name,sharedBy,title, _configuration.GetValue<string>("frontUrl"));
+                string htmlBody = string.Format(Constants.htmlTemplate, header, dynamicContent);
+                EmailDataRequest emailDataRequest = new EmailDataRequest
+                {
+                    Subject = header,
+                    Body = htmlBody,
+                    EmailTo = x.User.Email
+                };
+                await _emailSender.SendEmail(emailDataRequest);
+            });
+            response.Message = "Momento compartido correctamente.";
             response.Data = moment.MomentUsers.Where(x=>request.SharedUsersId.Contains(x.UserId)).Select(x => new ShareMomentResponse
             {
                 UserId = x.UserId,
                 UserName = x.User.Name
             });
-            response.Message = "Momento compartido correctamente.";
+           
             return response;
         }
         public async Task<ResultPattern<bool>> DeleteShare(Guid userId,Guid momentId)

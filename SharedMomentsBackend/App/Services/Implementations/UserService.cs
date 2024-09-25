@@ -127,7 +127,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
         {
             return x => (x.UserId == currentUserId || x.FriendId == currentUserId) && x.Status.Equals(EFriendRequestStatus.Accepted);
         }
-        public async Task<ResultPattern<IEnumerable<UserFriendRequest>>> DataDropDownFriends(DefaultFilterParams filterParams, Guid currentUserId)
+        public async Task<ResultPattern<IEnumerable<UserFriendRequest>>> GetFriendList(DefaultFilterParams filterParams, Guid currentUserId)
         {
             ResultPattern<IEnumerable<UserFriendRequest>> response = new ResultPattern<IEnumerable<UserFriendRequest>>();
 
@@ -144,7 +144,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             });
             return response;
         }
-        public async Task<ResultPattern<List<UserFriendRequest>>> DataDropDownNoFriends(DefaultFilterParams filterParams, Guid currentUserId)
+        public async Task<ResultPattern<List<UserFriendRequest>>> GetNoFriendList(DefaultFilterParams filterParams, Guid currentUserId)
         {
             ResultPattern<List<UserFriendRequest>> response = new ResultPattern<List<UserFriendRequest>>();
 
@@ -175,6 +175,37 @@ namespace SharedMomentsBackend.App.Services.Implementations
                 ProfileUrl = (x.UserId == currentUserId) ? x.Friend.Profile?.Url : x.User.Profile?.Url,
                 Status = x.Status,
                 OwnerId = x.UserId
+            }));
+            return response;
+        }
+
+        public async Task<ResultPattern<List<DataDropdownUser>>> GetFriendListDropDown(DefaultFilterParams filterParams, Guid currentUserId)
+        {
+            ResultPattern<List<DataDropdownUser>> response = new ResultPattern<List<DataDropdownUser>>();
+
+            Expression<Func<UserFriend, bool>> filterFriendsFromSentRequest = x=>x.UserId==currentUserId && x.Status.Equals(EFriendRequestStatus.Accepted);//amigos de solicitudes enviadas
+            Expression<Func<UserFriend, bool>> filterFriendsFromReceivedRequest = x => x.FriendId == currentUserId && x.Status.Equals(EFriendRequestStatus.Accepted);//amigos de solicitudes enviadas
+
+            IEnumerable<UserFriend> friendsFromSentRequest = await _userFriendRepository
+                .GetAll(filter: filterFriendsFromSentRequest, null, $"{nameof(UserFriend.Friend)}.{nameof(User.Profile)}");
+
+            IEnumerable<UserFriend> friendsFromReceivedRequest = await _userFriendRepository
+               .GetAll(filter: filterFriendsFromReceivedRequest, null, $"{nameof(UserFriend.User)}.{nameof(User.Profile)}");
+
+            response.Data = new List<DataDropdownUser>();
+
+            response.Data.AddRange(friendsFromSentRequest.Select(x => new DataDropdownUser
+            {
+                Id = x.FriendId,
+                Label = x.Friend.Name ,
+                ProfileUrl = x.Friend.Profile?.Url
+            }));
+
+            response.Data.AddRange(friendsFromReceivedRequest.Select(x => new DataDropdownUser
+            {
+                Id = x.UserId,
+                Label = x.User.Name,
+                ProfileUrl = x.User.Profile?.Url
             }));
             return response;
         }
@@ -409,6 +440,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             };
 
             UserFriend userFriend = await _userFriendRepository.GetFirstOrDefault(x => x.UserId == request.UserId && x.FriendId == request.FriendId && x.Status.Equals(EFriendRequestStatus.Accepted));
+            
             await _userFriendRepository.Delete(userFriend);
 
             await _unitOfWork.Commit();
