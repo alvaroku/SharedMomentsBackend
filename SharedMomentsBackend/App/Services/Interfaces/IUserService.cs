@@ -16,5 +16,7 @@ namespace SharedMomentsBackend.App.Services.Interfaces
         Task<ResultPattern<AddToFriendsResponse>> AcceptFriendRequest(AddToFriendsRequest request);
         Task<ResultPattern<AddToFriendsResponse>> DeleteFromFriends(AddToFriendsRequest request);
         Task<ResultPattern<AddToFriendsResponse>> DeleteFriendRequest(AddToFriendsRequest request);
+        Task<ResultPattern<ChangePasswordResponse>> ChangePassword(ChangePasswordRequest request);
+        Task<ResultPattern<RecoveryPasswordResponse>> RecoveryPassword(RecoveryPasswordRequest request);
     }
 }

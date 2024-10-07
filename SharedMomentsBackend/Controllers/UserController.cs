@@ -123,5 +123,23 @@ namespace SharedMomentsBackend.Controllers
             ResultPattern<AddToFriendsResponse> result = await _userService.DeleteFriendRequest(request);
             return StatusCode(result.StatusCode, result);
         }
+
+        [Authorize]
+        [HttpPut("ChangePassword")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+        {
+            Claim userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            Guid OwnerId = Guid.Parse(userIdClaim.Value);
+            request.UserId = OwnerId;
+            ResultPattern<ChangePasswordResponse> result = await _userService.ChangePassword(request);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPost("RecoveryPassword")]
+        public async Task<IActionResult> RecoveryPassword(RecoveryPasswordRequest request)
+        {
+            ResultPattern<RecoveryPasswordResponse> result = await _userService.RecoveryPassword(request);
+            return StatusCode(result.StatusCode, result);
+        }
     }
 }

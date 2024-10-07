@@ -14,7 +14,9 @@ namespace SharedMomentsBackend.App.DB.Respositories.Implementations
         }
         public async Task<User> Login(LoginRequest loginRequest)
         {
-           return await _unitOfWork.Context.Users.Where(x => x.IsActive && x.Email == loginRequest.Email && x.PasswordHash == loginRequest.Password).FirstOrDefaultAsync();
+            return await GetFirstOrDefault(x => 
+                x.IsActive && x.Email == loginRequest.Email && 
+                x.PasswordHash == loginRequest.Password,includeProperties:$"{nameof(User.Profile)}");
         }
     }
 }

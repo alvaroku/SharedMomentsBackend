@@ -6,6 +6,7 @@ using EmailSenderLibrary.App.Interfaces;
 using EmailSenderLibrary.App.Models;
 using EncryptifyLibrary.App.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using SharedMomentsBackend.App.DB.Migrations;
 using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models;
@@ -77,6 +78,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
             }
             User user = await _userRepository.Login(request);
             response.Data = _mapper.Map<LoginResponse>(user);
+            response.Data.ProfilePicture = user.Profile?.Url;
             response.Data.Token = _authenticationService.Authenticate(new AuthenticationDataRequest
             {
                 UserId = user.Id.ToString(),
@@ -485,6 +487,73 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             response.Message = "Solicitud eliminada.";
 
+            return response;
+        }
+
+        public async Task<ResultPattern<ChangePasswordResponse>> ChangePassword(ChangePasswordRequest request)
+        {
+            ResultPattern<ChangePasswordResponse> response = new ResultPattern<ChangePasswordResponse>();   
+
+            bool userExist = await _userRepository.Exists(x => x.Id == request.UserId);
+            if (!userExist)
+            {
+                response.StatusCode = 404;
+                response.Message = "Usuario no encontrado.";
+                response.IsSuccess = false;
+                return response;
+            }
+
+            User user = await _userRepository.GetFirstOrDefault(x => x.Id == request.UserId);
+
+            string currentHashedPassword = _encryptService.Encrypt(request.CurrentPassword);
+
+            if (!user.PasswordHash.Equals(currentHashedPassword))
+            {
+                response.StatusCode = 400;
+                response.Message = "Contraseña actual incorrecta.";
+                response.IsSuccess = false;
+                return response;
+            }
+            user.PasswordHash = _encryptService.Encrypt(request.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+            await _unitOfWork.Commit();
+            response.Message = "Contraseña actualizada correctamente.";
+            return response;
+        }
+
+        public async Task<ResultPattern<RecoveryPasswordResponse>> RecoveryPassword(RecoveryPasswordRequest request)
+        {
+            ResultPattern<RecoveryPasswordResponse> response = new ResultPattern<RecoveryPasswordResponse>();
+
+            bool userExist = await _userRepository.Exists(x => x.Email.ToLower() == request.Email.Trim().ToLower());
+            if (!userExist)
+            {
+                response.StatusCode = 404;
+                response.Message = "Usuario no encontrado.";
+                response.IsSuccess = false;
+                return response;
+            }
+
+            User user = await _userRepository.GetFirstOrDefault(x => x.Email.ToLower() == request.Email.Trim().ToLower());
+            
+            string tempPassword = _encryptService.GenerateRandomString();
+            
+            user.PasswordHash = _encryptService.Encrypt(tempPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+            await _unitOfWork.Commit();
+
+            string header = "Recuperación de contraseña";
+            string dynamicContent = Constants.templateRecoveryPassword(user.Name, tempPassword, _configuration.GetValue<string>("frontUrl"));
+            string htmlBody = string.Format(Constants.htmlTemplate, header, dynamicContent);
+            EmailDataRequest emailDataRequest = new EmailDataRequest
+            {
+                Subject = header,
+                Body = htmlBody,
+                EmailTo = user.Email
+            };
+            await _emailSender.SendEmail(emailDataRequest);
+
+            response.Message = "Se ha enviado un correo con la información para acceder nuevamente al sistema, por favor verifica tu bandeja.";
             return response;
         }
     }
