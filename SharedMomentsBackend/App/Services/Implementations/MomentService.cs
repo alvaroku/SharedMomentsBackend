@@ -373,7 +373,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             await _unitOfWork.Commit();
 
-            moment = await _momentRepository.GetById(id, $"{nameof(Moment.Owner)},{nameof(Moment.MomentUsers)}.{nameof(User)}");
+            moment = await _momentRepository.GetById(id, $"{nameof(Moment.Owner)},{nameof(Moment.MomentUsers)}.{nameof(User)}.{nameof(User.Profile)}");
             
             string sharedBy = moment.Owner.Name;
             string title = moment.Title;
@@ -395,7 +395,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             response.Data = moment.MomentUsers.Where(x=>request.SharedUsersId.Contains(x.UserId)).Select(x => new ShareMomentResponse
             {
                 UserId = x.UserId,
-                UserName = x.User.Name
+                UserName = x.User.Name,
+                ProfileUrl = x.User.Profile?.Url
             });
            
             return response;

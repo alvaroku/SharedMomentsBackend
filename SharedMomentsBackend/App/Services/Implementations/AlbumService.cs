@@ -255,7 +255,7 @@ namespace SharedMomentsBackend.App.Services.Implementations
 
             await _unitOfWork.Commit();
 
-            moment = await _albumRepository.GetById(id, $"{nameof(Album.Owner)},{nameof(Album.AlbumUsers)}.{nameof(User)}");
+            moment = await _albumRepository.GetById(id, $"{nameof(Album.Owner)},{nameof(Album.AlbumUsers)}.{nameof(User)}.{nameof(User.Profile)}");
 
             string sharedBy = moment.Owner.Name;
             string title = moment.Name;
@@ -277,7 +277,8 @@ namespace SharedMomentsBackend.App.Services.Implementations
             response.Data = moment.AlbumUsers.Where(x => request.SharedUsersId.Contains(x.UserId)).Select(x => new ShareAlbumResponse
             {
                 UserId = x.UserId,
-                UserName = x.User.Name
+                UserName = x.User.Name,
+                ProfileUrl = x.User.Profile?.Url
             });
             response.Message = "Albúm compartido correctamente.";
             return response;
