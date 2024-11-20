@@ -6,7 +6,6 @@ using EmailSenderLibrary.App.Interfaces;
 using EmailSenderLibrary.App.Models;
 using EncryptifyLibrary.App.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using SharedMomentsBackend.App.DB.Migrations;
 using SharedMomentsBackend.App.DB.Respositories.Base.Interfaces;
 using SharedMomentsBackend.App.DB.Respositories.Interfaces;
 using SharedMomentsBackend.App.Models;

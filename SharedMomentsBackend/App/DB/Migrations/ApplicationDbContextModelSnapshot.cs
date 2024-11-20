@@ -220,109 +220,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
                     b.ToTable("Resources");
                 });
 
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Action", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Actions");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Module", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Modules");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.ModuleAction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ActionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ModuleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActionId");
-
-                    b.HasIndex("ModuleId");
-
-                    b.ToTable("ModuleActions");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Permission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ModuleActionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModuleActionId");
-
-                    b.ToTable("Permissions");
-                });
-
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -345,36 +242,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.RolePermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("PermissionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PermissionId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.User", b =>
@@ -529,55 +396,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.ModuleAction", b =>
-                {
-                    b.HasOne("SharedMomentsBackend.App.Models.Entities.Security.Action", "Action")
-                        .WithMany("ModuleActions")
-                        .HasForeignKey("ActionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SharedMomentsBackend.App.Models.Entities.Security.Module", "Module")
-                        .WithMany("ModuleActions")
-                        .HasForeignKey("ModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Action");
-
-                    b.Navigation("Module");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Permission", b =>
-                {
-                    b.HasOne("SharedMomentsBackend.App.Models.Entities.Security.ModuleAction", "ModuleAction")
-                        .WithMany()
-                        .HasForeignKey("ModuleActionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ModuleAction");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.RolePermission", b =>
-                {
-                    b.HasOne("SharedMomentsBackend.App.Models.Entities.Security.Permission", "Permission")
-                        .WithMany("RolePermissions")
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SharedMomentsBackend.App.Models.Entities.Security.Role", "Role")
-                        .WithMany("RolePermissions")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Permission");
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.User", b =>
                 {
                     b.HasOne("SharedMomentsBackend.App.Models.Entities.Resource", "Profile")
@@ -631,26 +449,6 @@ namespace SharedMomentsBackend.App.DB.Migrations
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Resource", b =>
                 {
                     b.Navigation("MomentResources");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Action", b =>
-                {
-                    b.Navigation("ModuleActions");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Module", b =>
-                {
-                    b.Navigation("ModuleActions");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Permission", b =>
-                {
-                    b.Navigation("RolePermissions");
-                });
-
-            modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.Security.Role", b =>
-                {
-                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("SharedMomentsBackend.App.Models.Entities.User", b =>

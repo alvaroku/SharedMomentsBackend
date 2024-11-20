@@ -24,11 +24,11 @@ namespace SharedMomentsBackend.App.DB
         public DbSet<UserFriend> UserFriends { get; set; }
 
         public DbSet<Role> Roles { get; set; }
-        public DbSet<Models.Entities.Security.Action> Actions { get; set; }
-        public DbSet<Module> Modules { get; set; }
-        public DbSet<ModuleAction> ModuleActions { get; set; }
-        public DbSet<Permission> Permissions { get; set; }
-        public DbSet<RolePermission> RolePermissions { get; set; }
+        
+       
+        
+       
+  
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
