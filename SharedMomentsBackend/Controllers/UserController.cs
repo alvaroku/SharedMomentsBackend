@@ -17,12 +17,24 @@ namespace SharedMomentsBackend.Controllers
         {
             _userService = userService;
         }
-
+        [HttpGet]
+        public string Get()
+        {
+            return string.Join(" ", new string[] { "IT", "Works!!!" }); ;
+        }
         [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            ResultPattern<LoginResponse> result = await _userService.Login(request);
-            return StatusCode(result.StatusCode, result);
+            try
+            {
+                ResultPattern<LoginResponse> result = await _userService.Login(request);
+                return StatusCode(result.StatusCode, result);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, new { message = ex.Message, inner = ex.InnerException });
+            }
         }
 
         [HttpPost("Register")]
