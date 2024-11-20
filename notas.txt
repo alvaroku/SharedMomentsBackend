@@ -1,0 +1,1 @@
+Add-Migration NombreDeLaMigracion -OutputDir "App/DB/Migrations"
