@@ -84,6 +84,8 @@ namespace SharedMomentsBackend.Controllers
         }
 
         [HttpPost]
+        [RequestFormLimits(ValueCountLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue)]
+        [DisableRequestSizeLimit]
         public async Task<IActionResult> Post([FromForm] MomentRequest request, List<IFormFile> resources)
         {
             try
@@ -127,6 +129,8 @@ namespace SharedMomentsBackend.Controllers
 
         // PUT api/<AlbumController>/5
         [HttpPut("{id}")]
+        [RequestFormLimits(ValueCountLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue)]
+        [DisableRequestSizeLimit]
         public async Task<IActionResult> Put(Guid id, [FromForm] MomentRequest request, List<IFormFile> resources)
         {
             List<ResourceRequest> Resources = new List<ResourceRequest>();
